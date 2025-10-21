@@ -1,2 +1,3 @@
-# lwg-
-LOOP, WHILE and GOTO interpreter built in C++.
+# lwgpp - A LOOP, WHILE and maybe a GOTO interpreter
+
+
