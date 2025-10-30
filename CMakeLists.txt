@@ -3,4 +3,7 @@ project(lwgpp)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(lwgpp main.cpp)
+add_executable(lwgpp src/main.cpp
+        src/token/TokenType.h
+        src/token/Token.cpp
+)
