@@ -6,11 +6,7 @@
 #include <stdexcept>
 
 /**
- * LWScanner – konkrete Implementierung des Scanners
- * für die Loop/While-Programmiersprache.
- *
- * Erkennt Keywords wie "Loop", "While", "Do", "End"
- * sowie Operatoren '=', '+', '-', '>', ';'.
+ * LWScanner – implementation for loop while language
  */
 class LWScanner : public Scanner {
 private:

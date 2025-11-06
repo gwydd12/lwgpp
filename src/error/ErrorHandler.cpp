@@ -4,6 +4,6 @@
 bool ErrorHandler::hadError = false;
 
 void ErrorHandler::report(int line, const std::string& message) {
-    std::cerr << "[Zeile " << line << "] Fehler: " << message << std::endl;
+    std::cerr << "[Line " << line << "] Error: " << message << std::endl;
     hadError = true;
 }
