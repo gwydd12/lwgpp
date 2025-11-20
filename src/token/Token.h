@@ -16,4 +16,4 @@ public:
     std::string toString() const;
 };
 
-#endif // LWGPP_TOKEN_H
+#endif

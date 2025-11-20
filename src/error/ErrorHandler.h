@@ -10,9 +10,9 @@
 class ErrorHandler {
 public:
     static bool hadError;
-    static void report(int line, const std::string& message);
+
+    static void report(int line, const std::string &message);
 };
 
 
-
-#endif //LWGPP_ERRORHANDLER_H
+#endif

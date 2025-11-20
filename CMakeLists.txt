@@ -13,4 +13,6 @@ add_executable(lwgpp src/main.cpp
         src/lexer/LwScanner.cpp
         src/lexer/LwScanner.h
         src/token/Token.h
+        src/lexer/GotoScanner.h
+        src/lexer/GotoScanner.cpp
 )

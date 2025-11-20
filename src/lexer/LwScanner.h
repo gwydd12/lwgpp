@@ -3,6 +3,7 @@
 
 #include "Scanner.h"
 #include <regex>
+#include <unordered_map>
 #include <stdexcept>
 
 /**
@@ -10,40 +11,34 @@
  */
 class LWScanner : public Scanner {
 private:
-    const std::regex KEYWORDS{R"(Loop|While|Do|End|=|\+|\-|>|;)"};
+    /**
+    strong regex (const, static, RAII-valid)
+    **/
+    static const std::regex KEYWORDS;
+
+    /**
+     strongly typed enum + table (static, RAII-free)
+    **/
+    static const std::unordered_map<std::string, TokenType> KEYWORD_TABLE;
 
 public:
-    explicit LWScanner(const std::string& src)
-        : Scanner(src) {}
+    explicit LWScanner(const std::string &src)
+        : Scanner(src) {
+    }
 
 protected:
-    bool isKeyword(const std::string& word) override {
+    bool isKeyword(const std::string &word) override {
         return std::regex_match(word, KEYWORDS);
     }
 
-    void addKeywordToken(const std::string& word) override {
-        if (word == "Loop") {
-            tokens.emplace_back(TokenType::LOOP, currentLine);
-        } else if (word == "While") {
-            tokens.emplace_back(TokenType::WHILE, currentLine);
-        } else if (word == "Do") {
-            tokens.emplace_back(TokenType::DO, currentLine);
-        } else if (word == "End") {
-            tokens.emplace_back(TokenType::END, currentLine);
-        } else if (word == "=") {
-            tokens.emplace_back(TokenType::EQUALS, currentLine);
-        } else if (word == "+") {
-            tokens.emplace_back(TokenType::PLUS, currentLine);
-        } else if (word == "-") {
-            tokens.emplace_back(TokenType::MINUS, currentLine);
-        } else if (word == ">") {
-            tokens.emplace_back(TokenType::GREATER_THAN, currentLine);
-        } else if (word == ";") {
-            tokens.emplace_back(TokenType::SEMICOLON, currentLine);
+    void addKeywordToken(const std::string &word) override {
+        // modern C++: if mit initializer + auto
+        if (auto it = KEYWORD_TABLE.find(word); it != KEYWORD_TABLE.end()) {
+            tokens.emplace_back(it->second, currentLine);
         } else {
             throw std::invalid_argument("Invalid token: " + word);
         }
     }
 };
 
-#endif // LWGPP_LWSCANNER_H
+#endif

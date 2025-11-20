@@ -11,24 +11,22 @@
 #include "../token/Token.h"
 
 
-
 class Scanner {
 protected:
     std::string source;
     std::vector<Token> tokens;
     int currentLine = 1;
 
-    // Regex patterns
     const std::regex IDENTIFIER{R"(x\d+)"};
     const std::regex CONSTANT{R"(\d+)"};
 
 public:
     explicit Scanner(std::string src)
-        : source(std::move(src)) {}
+        : source(std::move(src)) {
+    }
 
     virtual ~Scanner() = default;
 
-    // Main entry point
     std::vector<Token> scanProgram() {
         std::istringstream stream(source);
         std::string line;
@@ -56,12 +54,12 @@ protected:
         }
     }
 
-    static std::string stripComments(const std::string& line) {
+    static std::string stripComments(const std::string &line) {
         size_t pos = line.find("//");
         return (pos != std::string::npos) ? line.substr(0, pos) : line;
     }
 
-    bool checkSemicolon(const std::string& word) {
+    bool checkSemicolon(const std::string &word) {
         if (!word.empty() && word.back() == ';') {
             std::string tokenPart = word.substr(0, word.size() - 1);
             if (!tokenPart.empty() && matchToken(tokenPart)) {
@@ -75,7 +73,7 @@ protected:
         return false;
     }
 
-    bool matchToken(const std::string& word) {
+    virtual bool matchToken(const std::string &word) {
         if (isKeyword(word)) {
             addKeywordToken(word);
             return true;
@@ -96,10 +94,10 @@ protected:
         return false;
     }
 
-    // Abstract methods
-    virtual bool isKeyword(const std::string& word) = 0;
-    virtual void addKeywordToken(const std::string& word) = 0;
+    virtual bool isKeyword(const std::string &word) = 0;
+
+    virtual void addKeywordToken(const std::string &word) = 0;
 };
 
 
-#endif //LWGPP_LEXER_H
+#endif
