@@ -1,16 +1,68 @@
 #include <iostream>
+#include <vector>
+#include "lexer/LWScanner.h"
+#include "error/ErrorHandler.h"
+#include "lexer/GotoScanner.h"
 
-// TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
-int main() {
-    // TIP Press <shortcut actionId="RenameElement"/> when your caret is at the <b>lang</b> variable name to see how CLion can help you rename it.
-    auto lang = "C++";
-    std::cout << "Hello and welcome to " << lang << "!\n";
+void gotoTest() {
+    std::cout << "=== GotoScanner Test ===" << std::endl;
 
-    for (int i = 1; i <= 5; i++) {
-        // TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-        std::cout << "i = " << i << std::endl;
+    // Example Goto Code
+    std::string sourceCode = R"(M23489: ;    Halt; x30942 = + - Goto Halt If Then M0 25432)";
+
+    // Scanner initialization
+    GotoScanner scanner(sourceCode);
+
+    // Scan start
+    auto tokens = scanner.scanProgram();
+
+    if (ErrorHandler::hadError) {
+        std::cerr << "Error while Scanning!" << std::endl;
     }
 
+    // Ausgabe
+    std::cout << "\nFound Goto Tokens:\n";
+    for (const auto &token: tokens) {
+        std::cout << token.toString() << std::endl;
+    }
+
+    std::cout << "\n=== GotoScan done ===" << std::endl;
+}
+
+void lwTest() {
+    std::cout << "=== LWScanner Test ===" << std::endl;
+
+    // Example Code
+    std::string sourceCode = R"(
+        Loop x1 = 5;
+        While x1 > 0;
+        Do
+            x1 = x1 - 1;
+        End
+        End
+    )";
+
+    // Scanner initialization
+    LWScanner scanner(sourceCode);
+
+    // start Scan
+    auto tokens = scanner.scanProgram();
+
+    if (ErrorHandler::hadError) {
+        std::cerr << "Error while Scanning!" << std::endl;
+    }
+
+    // Output found Tokens
+    std::cout << "\nFound LW Tokens:\n";
+    for (const auto &token: tokens) {
+        std::cout << token.toString() << std::endl;
+    }
+
+    std::cout << "\n=== LW Scan done ===" << std::endl;
+}
+
+int main() {
+    lwTest();
+    gotoTest();
     return 0;
-    // TIP See CLion help at <a href="https://www.jetbrains.com/help/clion/">jetbrains.com/help/clion/</a>. Also, you can try interactive lessons for CLion by selecting 'Help | Learn IDE Features' from the main menu.
 }
