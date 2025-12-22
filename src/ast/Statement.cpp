@@ -1,5 +1,5 @@
-#ifndef LWGPP_STATEMENT_H
-#define LWGPP_STATEMENT_H
+
+#include "../token/Token.cpp"
 #include <memory>
 #include <string>
 #include <vector>
@@ -12,6 +12,22 @@ struct Statement {
 enum class Operator {
     ADDITION, SUBTRACTION
 };
+
+/**
+ * The `inline` keyword tells the compiler to replace all function calls with the code to avoid
+ * the overhead of function calls. This is a compiler optimization technique to improve performance of small functions.
+ */
+inline Operator getOperator(const Token& token) {
+    if (!token.isStatic()) {
+        throw std::runtime_error("Token is not a static token."); //TODO: Add a form of custom exception
+    }
+
+    switch (std::get<StaticToken>(token.value).type) { // safely extract the static token type
+        case StaticTokenType::PLUS: return Operator::ADDITION;
+        case StaticTokenType::MINUS: return Operator::SUBTRACTION;
+        default: throw std::runtime_error("Token is not a valid operator."); //TODO: Add a form of custom exception
+    }
+}
 
 struct Assignment final : Statement {
     std::string assignee;
@@ -35,13 +51,13 @@ struct Loop final : Statement {
 };
 
 struct While final : Statement {
-    int variable;
+    std::string variable;
     int constant;
     std::vector<std::unique_ptr<Statement>> body;
     int line;
 
-    While(const int v, const int c, std::vector<std::unique_ptr<Statement>> b, const int l)
-        : variable(v), constant(c), body(std::move(b)), line(l) {}
+    While(std::string v, const int c, std::vector<std::unique_ptr<Statement>> b, const int l)
+        : variable(std::move(v)), constant(c), body(std::move(b)), line(l) {}
 };
 
 struct Goto final : Statement {
@@ -71,6 +87,3 @@ struct Halt final : Statement {
     Halt(const int ml, const int l)
         : markerLine(ml), line(l) {}
 };
-
-
-#endif //LWGPP_STATEMENT_H

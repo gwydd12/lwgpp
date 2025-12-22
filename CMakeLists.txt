@@ -4,7 +4,7 @@ project(lwgpp)
 set(CMAKE_CXX_STANDARD 17)
 
 add_executable(lwgpp src/main.cpp
-        src/token/Token.h
+        src/token/Token.cpp
         src/parser/Parser.cpp
-        src/ast/Statement.h
+        src/ast/Statement.cpp
 )
