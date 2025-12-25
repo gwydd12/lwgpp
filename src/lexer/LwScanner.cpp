@@ -11,14 +11,14 @@ const std::regex LWScanner::KEYWORDS{
 /**
  * STL Containers -> Unordered Map
  */
-const std::unordered_map<std::string, TokenType> LWScanner::KEYWORD_TABLE = {
-    {"Loop", TokenType::LOOP},
-    {"While", TokenType::WHILE},
-    {"Do", TokenType::DO},
-    {"End", TokenType::END},
-    {"=", TokenType::EQUALS},
-    {"+", TokenType::PLUS},
-    {"-", TokenType::MINUS},
-    {">", TokenType::GREATER_THAN},
-    {";", TokenType::SEMICOLON}
+const std::unordered_map<std::string, StaticTokenType> LWScanner::KEYWORD_TABLE = {
+    {"Loop", StaticTokenType::LOOP},
+    {"While", StaticTokenType::WHILE},
+    {"Do", StaticTokenType::DO},
+    {"End", StaticTokenType::END},
+    {"=", StaticTokenType::EQUALS},
+    {"+", StaticTokenType::PLUS},
+    {"-", StaticTokenType::MINUS},
+    {">", StaticTokenType::GREATER_THAN},
+    {";", StaticTokenType::SEMICOLON}
 };

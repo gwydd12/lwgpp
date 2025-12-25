@@ -124,7 +124,7 @@ protected:
         if (!word.empty() && word.back() == ';') {
             std::string tokenPart = word.substr(0, word.size() - 1);
             if (!tokenPart.empty() && matchToken(tokenPart)) {
-                tokens.emplace_back(TokenType::SEMICOLON, currentLine);
+                tokens.emplace_back(StaticTokenType::SEMICOLON, currentLine);
                 return true;
             } else {
                 ErrorHandler::report(currentLine, "Unexpected token '" + word + "'");
@@ -152,14 +152,14 @@ protected:
         }
 
         if (std::regex_match(word, IDENTIFIER)) {
-            int value = std::stoi(word.substr(1));
-            tokens.emplace_back(TokenType::VARIABLE, currentLine, value);
+            std::string value = word.substr(1);
+            tokens.emplace_back(DynamicTokenType::VARIABLE, value, currentLine);
             return true;
         }
 
         if (std::regex_match(word, CONSTANT)) {
-            int value = std::stoi(word);
-            tokens.emplace_back(TokenType::CONSTANT, currentLine, value);
+            std::string value = word;
+            tokens.emplace_back(DynamicTokenType::CONSTANT, value, currentLine);
             return true;
         }
 
