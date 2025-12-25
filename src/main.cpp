@@ -7,7 +7,7 @@
 #include "token/Token.h"
 
 int main() {
-    auto lexer = std::make_unique<LWScanner>(
+    const auto lexer = std::make_unique<LWScanner>(
         "Loop x1 Do x1 = x1 + 1; End"
     );
     std::vector<Token> const tokens = lexer->scanProgram();
