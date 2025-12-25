@@ -143,7 +143,6 @@ std::unique_ptr<Loop> LWParser::parseLoop() {
     Token& conditionToken = expectOneOfDynamic({DynamicTokenType::VARIABLE, DynamicTokenType::CONSTANT});
     expectStatic(StaticTokenType::DO);
 
-    // parse body until matching END; reuse parseLW on the same token stream
     return std::make_unique<Loop>(
         conditionToken.getDynamic().type == DynamicTokenType::CONSTANT,
         conditionToken.getDynamic().value,
@@ -194,24 +193,88 @@ bool LWParser::isBalancedStatementSequence(std::initializer_list<StaticTokenType
     return found;
 }
 
-/* ----- GOTOParser stubs (implement full logic in Parser.h/.cpp as needed) ----- */
+/**
+ * parse - Parses a vector of tokens of a GOTO program into a vector of Statements.
+ * The function processes the tokens sequentially, identifying and constructing
+ * different types of statements such as HALT, IF, and GOTO. It ensures that
+ * all GOTO statements reference valid markers defined in the program.
+ * @return A vector of unique pointers to Statements representing the parsed program.
+ */
+std::vector<std::unique_ptr<Statement>> GOTOParser::parse(std::vector<Token> tokens) {
+    setTokens(std::move(tokens));
+    std::vector<std::unique_ptr<Statement>> statements;
 
-std::vector<std::unique_ptr<Statement>> GOTOParser::parse(std::vector<Token> /*tokens*/) {
-    throw std::runtime_error("GOTOParser::parse not implemented");
+    while (!isAtEnd()) {
+        Token currentToken = peek();
+        lastLine = currentToken.line;
+
+        if (currentToken.isStatic()) {
+            switch (currentToken.getStatic().type) {
+                case StaticTokenType::HALT:
+                    statements.push_back(parseHalt(currentToken.line, -1));
+                    break;
+                case StaticTokenType::IF:
+                    statements.push_back(parseIf(currentToken.line, -1));
+                    break;
+                case StaticTokenType::GOTO:
+                    statements.push_back(parseGotoStatement(currentToken.line, -1));
+                    break;
+                case StaticTokenType::SEMICOLON:
+                    expectStatic(StaticTokenType::SEMICOLON);
+                    break;
+                default:
+                    throw std::runtime_error("Unexpected static token at line " + std::to_string(currentToken.line));
+            }
+        } else {
+            throw std::runtime_error("Unexpected token at line " + std::to_string(currentToken.line));
+        }
+    }
+
+    checkGotoValues();
+
+    return statements;
 }
 
-std::unique_ptr<Halt> GOTOParser::parseHalt(int /*line*/, int /*markerLine*/) {
-    throw std::runtime_error("GOTOParser::parseHalt not implemented");
+std::unique_ptr<Halt> GOTOParser::parseHalt(int line, int markerLine) {
+    expectStatic(StaticTokenType::HALT);
+    containsHalt = true;
+    return std::make_unique<Halt>(markerLine, line);
 }
 
-std::unique_ptr<If> GOTOParser::parseIf(int /*line*/, int /*markerLine*/) {
-    throw std::runtime_error("GOTOParser::parseIf not implemented");
+std::unique_ptr<If> GOTOParser::parseIf(int line, int markerLine) {
+    expectStatic(StaticTokenType::IF);
+    Token& variable = expectDynamic(DynamicTokenType::VARIABLE);
+    expectStatic(StaticTokenType::EQUALS);
+    Token& constant = expectDynamic(DynamicTokenType::CONSTANT);
+    expectStatic(StaticTokenType::THEN);
+    expectStatic(StaticTokenType::GOTO);
+
+    Token& gotoMarker = expectDynamic(DynamicTokenType::MARKER);
+    return std::make_unique<If>(
+        variable.getStringValue(),
+        constant.getIntValue(),
+        gotoMarker.getDynamic().value,
+        markerLine,
+        line
+    );
 }
 
-std::unique_ptr<Goto> GOTOParser::parseGotoStatement(int /*line*/, int /*markerLine*/) {
-    throw std::runtime_error("GOTOParser::parseGotoStatement not implemented");
+std::unique_ptr<Goto> GOTOParser::parseGotoStatement(int line, int markerLine) {
+    expectStatic(StaticTokenType::GOTO);
+    Token& gotoMarker = expectDynamic(DynamicTokenType::MARKER);
+    gotoValuesMap.emplace(gotoMarker.getStringValue(), markerLine);
+
+    return std::make_unique<Goto>(
+        gotoMarker.getStringValue(),
+        markerLine,
+        line
+    );
 }
 
 void GOTOParser::checkGotoValues() {
-    throw std::runtime_error("GOTOParser::checkGotoValues not implemented");
+    for (const auto& [gotoValue, markerLine] : gotoValuesMap) {
+        if (markerNumbers.find(std::stoi(gotoValue.substr(1))) == markerNumbers.end()) {
+            throw std::runtime_error("Undefined marker referenced in GOTO: " + gotoValue);
+        }
+    }
 }
