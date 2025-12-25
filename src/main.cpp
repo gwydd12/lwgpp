@@ -1,68 +1,28 @@
 #include <iostream>
+#include <memory>
 #include <vector>
-#include "lexer/LWScanner.h"
-#include "error/ErrorHandler.h"
-#include "lexer/GotoScanner.h"
 
-void gotoTest() {
-    std::cout << "=== GotoScanner Test ===" << std::endl;
-
-    // Example Goto Code
-    std::string sourceCode = R"(M23489: ;    Halt; x30942 = + - Goto Halt If Then M0 25432)";
-
-    // Scanner initialization
-    GotoScanner scanner(sourceCode);
-
-    // Scan start
-    auto tokens = scanner.scanProgram();
-
-    if (ErrorHandler::hadError) {
-        std::cerr << "Error while Scanning!" << std::endl;
-    }
-
-    // Ausgabe
-    std::cout << "\nFound Goto Tokens:\n";
-    for (const auto &token: tokens) {
-        std::cout << token.toString() << std::endl;
-    }
-
-    std::cout << "\n=== GotoScan done ===" << std::endl;
-}
-
-void lwTest() {
-    std::cout << "=== LWScanner Test ===" << std::endl;
-
-    // Example Code
-    std::string sourceCode = R"(
-        Loop x1 = 5;
-        While x1 > 0;
-        Do
-            x1 = x1 - 1;
-        End
-        End
-    )";
-
-    // Scanner initialization
-    LWScanner scanner(sourceCode);
-
-    // start Scan
-    auto tokens = scanner.scanProgram();
-
-    if (ErrorHandler::hadError) {
-        std::cerr << "Error while Scanning!" << std::endl;
-    }
-
-    // Output found Tokens
-    std::cout << "\nFound LW Tokens:\n";
-    for (const auto &token: tokens) {
-        std::cout << token.toString() << std::endl;
-    }
-
-    std::cout << "\n=== LW Scan done ===" << std::endl;
-}
+#include "parser/Parser.h"
+#include "token/Token.h"
 
 int main() {
-    lwTest();
-    gotoTest();
+    auto parser = std::make_unique<LWParser>();
+
+    // build or populate your tokens vector here
+    std::vector const tokens = {
+        // Example tokens (you would replace these with actual tokens)
+        Token(StaticToken(StaticTokenType::LOOP), 1),
+        Token(DynamicToken(DynamicTokenType::VARIABLE, "i"), 1),
+        Token(StaticToken(StaticTokenType::DO), 1),
+        Token(DynamicToken(DynamicTokenType::VARIABLE, "i"), 2),
+        Token(StaticToken(StaticTokenType::EQUALS), 2),
+        Token(DynamicToken(DynamicTokenType::VARIABLE, "i"), 2),
+        Token(StaticToken(StaticTokenType::PLUS), 2),
+        Token(DynamicToken(DynamicTokenType::CONSTANT, "1"), 2),
+        Token(StaticToken(StaticTokenType::SEMICOLON), 2),
+        Token(StaticToken(StaticTokenType::END), 3)
+    };
+
+    const auto stmts = parser->parse(tokens);
     return 0;
 }
