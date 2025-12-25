@@ -58,7 +58,7 @@ public:
 
 private:
     std::unordered_set<int> markerNumbers;
-    std::unordered_map<int, int> gotoValuesMap;
+    std::unordered_map<std::string, int> gotoValuesMap;
     std::unordered_map<int, int> markerLineMap;
     bool containsHalt = false;
 

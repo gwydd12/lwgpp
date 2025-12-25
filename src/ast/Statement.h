@@ -60,23 +60,23 @@ struct While final : Statement {
 };
 
 struct Goto final : Statement {
-    int markerNumber;
+    std::string marker;
     int markerLine;
     int line;
 
-    Goto(const int mn, const int ml, const int l)
-        : markerNumber(mn), markerLine(ml), line(l) {}
+    Goto(std::string m, const int ml, const int l)
+        : marker(std::move(m)), markerLine(ml), line(l) {}
 };
 
 struct If final : Statement {
-    int variable;
+    std::string variable;
     int constant;
-    int markerNumber;
+    std::string marker;
     int markerLine;
     int line;
 
-    If(const int v, const int c, const int mn, const int ml, const int l)
-        : variable(v), constant(c), markerNumber(mn), markerLine(ml), line(l) {}
+    If(std::string v, const int c, std::string m, const int ml, const int l)
+        : variable(std::move(v)), constant(c), marker(std::move(m)), markerLine(ml), line(l) {}
 };
 
 struct Halt final : Statement {
