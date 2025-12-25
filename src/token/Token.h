@@ -53,6 +53,8 @@ struct Token {
     Token(StaticToken staticType, const int l): value(staticType), line(l) {}
     // Using std::move to avoid unnecessary copies of the string value.
     Token(DynamicToken dynamicType, const int l): value(std::move(dynamicType)), line(l) {}
+    Token(StaticTokenType staticType, const int l): value(StaticToken(staticType)), line(l) {}
+    Token(DynamicTokenType dynamicType, std::string v, const int l): value(DynamicToken(dynamicType, std::move(v))), line(l) {}
 
     // [[nodiscard]] indicates that the return value should not be ignored.
     [[nodiscard]] bool isStatic() const { return std::holds_alternative<StaticToken>(value); }

@@ -18,4 +18,5 @@ add_executable(lwgpp src/main.cpp
         src/parser/Parser.h
         src/token/Token.h
         src/ast/Statement.h
+        src/lexer/Scanner.h
 )

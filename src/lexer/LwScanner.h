@@ -35,7 +35,7 @@ private:
      * - unordered_map: fast O(1) lookup
      * - uses strongly typed enum TokenType
      */
-    static const std::unordered_map<std::string, TokenType> KEYWORD_TABLE;
+    static const std::unordered_map<std::string, StaticTokenType> KEYWORD_TABLE;
 
 public:
     /**
@@ -78,7 +78,7 @@ protected:
      * - exception handling: throws std::invalid_argument
      */
     void addKeywordToken(const std::string &word) override {
-        if (auto it = KEYWORD_TABLE.find(word); it != KEYWORD_TABLE.end()) {
+        if (const auto it = KEYWORD_TABLE.find(word); it != KEYWORD_TABLE.end()) {
             tokens.emplace_back(it->second, currentLine);
         } else {
             throw std::invalid_argument("Invalid token: " + word);

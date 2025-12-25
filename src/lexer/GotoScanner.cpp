@@ -11,15 +11,15 @@ const std::regex GotoScanner::KEYWORDS{
 /**
  * STL Containers -> Unordered Map
  */
-const std::unordered_map<std::string, TokenType> GotoScanner::KEYWORD_TABLE = {
-    {"Goto", TokenType::GOTO},
-    {"If", TokenType::IF},
-    {"Then", TokenType::THEN},
-    {"Halt", TokenType::HALT},
-    {"=", TokenType::EQUALS},
-    {"+", TokenType::PLUS},
-    {"-", TokenType::MINUS},
-    {";", TokenType::SEMICOLON}
+const std::unordered_map<std::string, StaticTokenType> GotoScanner::KEYWORD_TABLE = {
+    {"Goto", StaticTokenType::GOTO},
+    {"If", StaticTokenType::IF},
+    {"Then", StaticTokenType::THEN},
+    {"Halt", StaticTokenType::HALT},
+    {"=", StaticTokenType::EQUALS},
+    {"+", StaticTokenType::PLUS},
+    {"-", StaticTokenType::MINUS},
+    {";", StaticTokenType::SEMICOLON}
 };
 
 const std::regex GotoScanner::MARKER{

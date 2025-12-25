@@ -31,7 +31,7 @@ private:
      * Static lookup table mapping keyword strings to TokenType
      * (unordered_map, strongly typed enum usage)
      */
-    static const std::unordered_map<std::string, TokenType> KEYWORD_TABLE;
+    static const std::unordered_map<std::string, StaticTokenType> KEYWORD_TABLE;
 
     /**
      * Regex for markers (M1, M2, ... optionally ending with ':')
@@ -79,7 +79,7 @@ protected:
      * - exception handling
      */
     void addKeywordToken(const std::string &word) override {
-        if (auto it = KEYWORD_TABLE.find(word); it != KEYWORD_TABLE.end()) {
+        if (const auto it = KEYWORD_TABLE.find(word); it != KEYWORD_TABLE.end()) {
             tokens.emplace_back(it->second, currentLine);
         } else {
             throw std::invalid_argument("Invalid token: " + word);
@@ -118,14 +118,14 @@ protected:
             // Extract number from marker string
             size_t start = 1;
             size_t end = word.back() == ':' ? word.size() - 1 : word.size();
-            int value = std::stoi(word.substr(start, end - start));
+            std::string value = word.substr(start, end - start);
 
             // Add marker token
-            tokens.emplace_back(TokenType::MARKER, currentLine, value);
+            tokens.emplace_back(DynamicTokenType::MARKER, value, currentLine);
 
             // Add colon token if present
             if (word.back() == ':') {
-                tokens.emplace_back(TokenType::COLON, currentLine);
+                tokens.emplace_back(StaticTokenType::COLON, currentLine);
             }
         } catch (const std::exception &) {
             throw std::invalid_argument("Marker value too big or invalid: " + word);
