@@ -66,11 +66,14 @@ void Parser::skipToNextLine() {
     }
 }
 
-void Parser::validateSemicolon() {
-    if (isAtEnd() || !tokens[current].isStatic() || std::get<StaticToken>(tokens[current].value).type != StaticTokenType::SEMICOLON) {
-        throw std::runtime_error("Expected semicolon");
+void Parser::validateSemicolon(const std::vector<Token> &tokens) {
+    if (isAtEnd()) return;
+    if (tokens[current].isStatic() &&
+        tokens[current].getStatic().type == StaticTokenType::SEMICOLON) {
+        expectStatic(StaticTokenType::SEMICOLON);
+    } else {
+        throw std::runtime_error("Expected semicolon at line " + std::to_string(tokens[current].line));
     }
-    ++current;
 }
 
 void Parser::setTokens(std::vector<Token> t) {
@@ -116,6 +119,7 @@ std::vector<std::unique_ptr<Statement>> LWParser::parseLW(std::vector<Token>& /*
                     break;
                 case StaticTokenType::END:
                     parseEnd();
+                    encounteredEnd = true;
                     break;
                 case StaticTokenType::SEMICOLON:
                     expectStatic(StaticTokenType::SEMICOLON);

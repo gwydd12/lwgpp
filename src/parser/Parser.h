@@ -23,7 +23,7 @@ protected:
 
     [[nodiscard]] bool isAtEnd() const;
     void skipToNextLine();
-    void validateSemicolon();
+    void validateSemicolon(const std::vector<Token>& tokens);
     void setTokens(std::vector<Token> t);
 
     std::unique_ptr<Assignment> parseAssignment(int line);

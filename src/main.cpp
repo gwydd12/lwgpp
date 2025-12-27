@@ -9,9 +9,15 @@
 
 int main() {
     std::string sourceCode = R"(
-    x1 = x1 + 3;
+    x0 = x0 + 3;
+    x1 = x1 + 2;
+
+    x1 = x1 - 1;
+    x9 = x0 + 0;
     Loop x1 Do
-      x0 = x0 + 1;
+      Loop x9 Do
+        x0 = x0 + 1
+      End;
     End
     )";
     const auto lexer = std::make_unique<LWScanner>(
