@@ -3,6 +3,8 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <variant>
+#include <stdexcept>
 
 struct Statement {
     virtual ~Statement() = default;
@@ -12,19 +14,15 @@ enum class Operator {
     ADDITION, SUBTRACTION
 };
 
-/**
- * The `inline` keyword tells the compiler to replace all function calls with the code to avoid
- * the overhead of function calls. This is a compiler optimization technique to improve performance of small functions.
- */
 inline Operator getOperator(const Token& token) {
     if (!token.isStatic()) {
-        throw std::runtime_error("Token is not a static token."); //TODO: Add a form of custom exception
+        throw std::runtime_error("Token is not a static token.");
     }
 
-    switch (std::get<StaticToken>(token.value).type) { // safely extract the static token type
+    switch (std::get<StaticToken>(token.value).type) {
         case StaticTokenType::PLUS: return Operator::ADDITION;
         case StaticTokenType::MINUS: return Operator::SUBTRACTION;
-        default: throw std::runtime_error("Token is not a valid operator."); //TODO: Add a form of custom exception
+        default: throw std::runtime_error("Token is not a valid operator.");
     }
 }
 
@@ -86,3 +84,35 @@ struct Halt final : Statement {
     Halt(const int ml, const int l)
         : markerLine(ml), line(l) {}
 };
+
+// Use pointer alternatives to avoid copying non-copyable members
+using StatementTypes = std::variant<
+    const Assignment*,
+    const Loop*,
+    const While*,
+    const Goto*,
+    const If*,
+    const Halt*
+>;
+
+inline StatementTypes getStatementType(const Statement& statement) {
+    if (const auto* assignment = dynamic_cast<const Assignment*>(&statement)) {
+        return assignment;
+    }
+    if (const auto* loop = dynamic_cast<const Loop*>(&statement)) {
+        return loop;
+    }
+    if (const auto* whileStmt = dynamic_cast<const While*>(&statement)) {
+        return whileStmt;
+    }
+    if (const auto* gotoStmt = dynamic_cast<const Goto*>(&statement)) {
+        return gotoStmt;
+    }
+    if (const auto* ifStmt = dynamic_cast<const If*>(&statement)) {
+        return ifStmt;
+    }
+    if (const auto* haltStmt = dynamic_cast<const Halt*>(&statement)) {
+        return haltStmt;
+    }
+    throw std::runtime_error("Unknown statement type at line");
+}

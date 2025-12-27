@@ -19,4 +19,10 @@ add_executable(lwgpp src/main.cpp
         src/token/Token.h
         src/ast/Statement.h
         src/lexer/Scanner.h
+        src/interpreter/Interpreter.h
+        src/interpreter/Interpreter.cpp
+        src/interpreter/Environment.cpp
+        src/interpreter/Environment.h
+        src/interpreter/LWInterpreter.cpp
+        src/interpreter/LWInterpreter.h
 )
