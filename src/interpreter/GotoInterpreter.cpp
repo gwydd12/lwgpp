@@ -6,10 +6,19 @@ void GotoInterpreter::interpret(const std::vector<std::unique_ptr<Statement> > &
 
 void GotoInterpreter::executeStatements(const std::vector<std::unique_ptr<Statement>> &stmts) {
     while (!isHalted_) {
-        const Statement& statement = *stmts.at(pc_);
+        if (pc_ < 0 || static_cast<size_t>(pc_) >= stmts.size()) {
+            throw std::out_of_range("Program counter out of range");
+        }
+
+        const auto &stmtPtr = stmts.at(pc_);
+        if (!stmtPtr) {
+            pc_++;
+            continue;
+        }
+
+        const Statement &statement = *stmtPtr;
         interpretStatement(statement);
     }
-
 }
 
 void GotoInterpreter::interpretStatement(const Statement& statement) {
