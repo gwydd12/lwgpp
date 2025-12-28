@@ -1,16 +1,55 @@
 #include <iostream>
+#include <memory>
+#include <vector>
 
-// TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+#include "interpreter/GotoInterpreter.h"
+#include "interpreter/LWInterpreter.h"
+#include "lexer/GotoScanner.h"
+#include "lexer/LwScanner.h"
+#include "parser/Parser.h"
+#include "token/Token.h"
+
 int main() {
-    // TIP Press <shortcut actionId="RenameElement"/> when your caret is at the <b>lang</b> variable name to see how CLion can help you rename it.
-    auto lang = "C++";
-    std::cout << "Hello and welcome to " << lang << "!\n";
+    std::string GotoSourceCode = R"(M1: x1 = x1 + 4;
+M2: x2 = x2 + 6;
 
-    for (int i = 1; i <= 5; i++) {
-        // TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-        std::cout << "i = " << i << std::endl;
+M3: x0 = x1 + 0;
+M4: If x2 = 0 Then Goto M8;
+M5: x2 = x2 - 1;
+M6: x0 = x0 + 1;
+M7: Goto M4;
+M8: Halt
+    )";
+    std::string LWSourceCode = R"(
+    x0 = x0 + 3;
+    x1 = x1 + 2;
+
+    x1 = x1 - 1;
+    x9 = x0 + 0;
+    Loop x1 Do
+      Loop x9 Do
+        x0 = x0 + 1;
+      End;
+    End
+        )";
+    const auto lexer = std::make_unique<GotoScanner>(
+        GotoSourceCode
+    );
+
+    std::vector<Token> const tokens = lexer->scanProgram();
+    const auto parser = std::make_unique<GOTOParser>();
+
+    const auto stmts = parser->parse(tokens);
+    std::cout << "Parsed " << stmts.size() << " statements." << std::endl;
+
+    const auto interpreter = std::make_unique<GotoInterpreter>(Environment{});
+    interpreter->setMarkerLineMap(parser->getMarkerLineMap());
+    interpreter->interpret(stmts);
+
+    std::map<std::string, int> variables = GotoInterpreter::environment.getVariables();
+    std::cout << "Variables:" << std::endl;
+    for (const auto& [var, value] : variables) {
+        std::cout << var << " = " << value << std::endl;
     }
-
     return 0;
-    // TIP See CLion help at <a href="https://www.jetbrains.com/help/clion/">jetbrains.com/help/clion/</a>. Also, you can try interactive lessons for CLion by selecting 'Help | Learn IDE Features' from the main menu.
 }
