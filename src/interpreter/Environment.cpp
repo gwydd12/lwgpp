@@ -10,7 +10,6 @@ void Environment::initVariablesIfAbsent(std::initializer_list<std::string> vars)
 }
 
 void Environment::setVariable(const std::string &var, const int value) {
-    std::cout << "Variable: " + var + ":" + std::to_string(value) << std::endl;
     variables_[var] = value;
 }
 

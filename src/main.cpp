@@ -10,14 +10,15 @@
 #include "token/Token.h"
 
 int main() {
-    std::string GotoSourceCode = R"(M1: x1 = x1 + 5;
-    M2: If x1 = 10 Then Goto M6;
+    std::string GotoSourceCode = R"(M1: x1 = x1 + 4;
+M2: x2 = x2 + 6;
 
-
-
-    M3: x2 = x1 - 3;
-    M4: Goto M1;
-    M6: Halt
+M3: x0 = x1 + 0;
+M4: If x2 = 0 Then Goto M8;
+M5: x2 = x2 - 1;
+M6: x0 = x0 + 1;
+M7: Goto M4;
+M8: Halt
     )";
     std::string LWSourceCode = R"(
     x0 = x0 + 3;
