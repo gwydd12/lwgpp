@@ -25,4 +25,6 @@ add_executable(lwgpp src/main.cpp
         src/interpreter/Environment.h
         src/interpreter/LWInterpreter.cpp
         src/interpreter/LWInterpreter.h
+        src/interpreter/GotoInterpreter.cpp
+        src/interpreter/GotoInterpreter.h
 )

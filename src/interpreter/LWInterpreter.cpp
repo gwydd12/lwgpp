@@ -42,7 +42,7 @@ void LWInterpreter::interpretLoop(const Loop& loop) {
 
 void LWInterpreter::interpretWhile(const While& whileStmt) {
     std::string variable = whileStmt.variable;
-    int constant = whileStmt.constant;
+    const int constant = whileStmt.constant;
 
     environment.initVariablesIfAbsent({variable});
 
