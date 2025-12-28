@@ -152,7 +152,7 @@ protected:
         }
 
         if (std::regex_match(word, IDENTIFIER)) {
-            std::string value = word.substr(1);
+            std::string value = word;
             tokens.emplace_back(DynamicTokenType::VARIABLE, value, currentLine);
             return true;
         }
