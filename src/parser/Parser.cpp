@@ -1,92 +1,127 @@
 #include "Parser.h"
 #include <algorithm>
 #include <stdexcept>
-#include <deque>
 
 using namespace std;
 
-Token Parser::peek() {
-    if (isAtEnd()) {
-        throw std::runtime_error("Unexpected end of input.");
-    }
-    return tokens[current];
-}
-
-Token& Parser::expectDynamic(DynamicTokenType expectedType) {
-    if (isAtEnd() || !std::holds_alternative<DynamicToken>(tokens[current].value)) {
-        throw std::runtime_error("Expected dynamic token");
-    }
-    if (std::get<DynamicToken>(tokens[current].value).type != expectedType) {
-        throw std::runtime_error("Expected dynamic token type mismatch");
-    }
-    return tokens[current++];
-}
-
-Token& Parser::expectStatic(StaticTokenType expectedType) {
-    if (isAtEnd() || !std::holds_alternative<StaticToken>(tokens[current].value)) {
-        throw std::runtime_error("Expected static token");
-    }
-    if (std::get<StaticToken>(tokens[current].value).type != expectedType) {
-        throw std::runtime_error("Unexpected static token type");
-    }
-    return tokens[current++];
-}
-
-Token& Parser::expectOneOfStatic(std::initializer_list<StaticTokenType> types) {
-    if (isAtEnd() || !std::holds_alternative<StaticToken>(tokens[current].value)) {
-        throw std::runtime_error("Expected static token");
-    }
-    const auto st = std::get<StaticToken>(tokens[current].value).type;
-    if (std::find(types.begin(), types.end(), st) == types.end()) {
-        throw std::runtime_error("Unexpected operator");
-    }
-    return tokens[current++];
-}
-
-Token& Parser::expectOneOfDynamic(std::initializer_list<DynamicTokenType> types) {
-    if (isAtEnd() || !std::holds_alternative<DynamicToken>(tokens[current].value)) {
-        throw std::runtime_error("Expected dynamic token");
-    }
-    const auto dt = std::get<DynamicToken>(tokens[current].value).type;
-    if (std::find(types.begin(), types.end(), dt) == types.end()) {
-        throw std::runtime_error("Unexpected dynamic token type");
-    }
-    return tokens[current++];
-}
-
 bool Parser::isAtEnd() const {
-    return current >= static_cast<int>(tokens.size());
+    return tokens.empty();
 }
+
+const Token& Parser::peek() const {
+    if (isAtEnd()) {
+        throw runtime_error("Unexpected end of input.");
+    }
+    return tokens.front();
+}
+
+Token Parser::consumeToken() {
+    if (isAtEnd()) {
+        throw runtime_error("Unexpected end of input.");
+    }
+    Token tok = tokens.front();
+    tokens.pop_front();
+    lastLine = tok.line;
+    return tok;
+}
+
+/* =======================
+ * expect*
+ * ======================= */
+
+Token Parser::expectDynamic(DynamicTokenType expectedType) {
+    if (isAtEnd() || !peek().isDynamic()) {
+        throw runtime_error("Expected dynamic token");
+    }
+
+    if (peek().getDynamic().type != expectedType) {
+        throw runtime_error("Expected dynamic token type mismatch");
+    }
+
+    return consumeToken();
+}
+
+Token Parser::expectStatic(StaticTokenType expectedType) {
+    if (isAtEnd() || !peek().isStatic()) {
+        throw runtime_error("Expected static token");
+    }
+
+    if (peek().getStatic().type != expectedType) {
+        throw runtime_error("Unexpected static token type");
+    }
+
+    return consumeToken();
+}
+
+Token Parser::expectOneOfStatic(
+    initializer_list<StaticTokenType> types) {
+    if (isAtEnd() || !peek().isStatic()) {
+        throw runtime_error("Expected static token");
+    }
+
+    const auto st = peek().getStatic().type;
+    if (find(types.begin(), types.end(), st) == types.end()) {
+        throw runtime_error("Unexpected operator");
+    }
+
+    return consumeToken();
+}
+
+Token Parser::expectOneOfDynamic(
+    initializer_list<DynamicTokenType> types) {
+    if (isAtEnd() || !peek().isDynamic()) {
+        throw runtime_error("Expected dynamic token");
+    }
+
+    const auto dt = peek().getDynamic().type;
+    if (find(types.begin(), types.end(), dt) == types.end()) {
+        throw runtime_error("Unexpected dynamic token type");
+    }
+
+    return consumeToken();
+}
+
 
 void Parser::skipToNextLine() {
     if (isAtEnd()) return;
-    int line = tokens[current].line;
-    while (!isAtEnd() && tokens[current].line == line) {
-        ++current;
+
+    int line = peek().line;
+    while (!isAtEnd() && peek().line == line) {
+        consumeToken();
     }
 }
 
 void Parser::validateSemicolon() {
-    if (isAtEnd() || !tokens[current].isStatic() || std::get<StaticToken>(tokens[current].value).type != StaticTokenType::SEMICOLON) {
-        throw std::runtime_error("Expected semicolon");
+    if (isAtEnd()) return;
+
+    if (peek().isStatic() &&
+        peek().getStatic().type == StaticTokenType::SEMICOLON) {
+        consumeToken();
+    } else {
+        throw runtime_error(
+            "Expected semicolon at line " +
+            to_string(peek().line));
     }
-    ++current;
 }
 
-void Parser::setTokens(std::vector<Token> t) {
-    tokens = std::move(t);
-    current = 0;
+void Parser::setTokens(vector<Token> t) {
+    tokens = deque<Token>(t.begin(), t.end());
     lastLine = 1;
 }
 
-std::unique_ptr<Assignment> Parser::parseAssignment(int line) {
-    Token& assigneeVariable = expectDynamic(DynamicTokenType::VARIABLE);
-    expectStatic(StaticTokenType::EQUALS);
-    Token& assignVariable = expectDynamic(DynamicTokenType::VARIABLE);
-    Token& op = expectOneOfStatic({StaticTokenType::PLUS, StaticTokenType::MINUS});
-    Token& constant = expectDynamic(DynamicTokenType::CONSTANT);
+/* =======================
+ * Assignment
+ * ======================= */
 
-    return std::make_unique<Assignment>(
+unique_ptr<Assignment> Parser::parseAssignment(int line) {
+    Token assigneeVariable = expectDynamic(DynamicTokenType::VARIABLE);
+    expectStatic(StaticTokenType::EQUALS);
+    Token assignVariable = expectDynamic(DynamicTokenType::VARIABLE);
+    Token op = expectOneOfStatic(
+        {StaticTokenType::PLUS, StaticTokenType::MINUS});
+    Token constant = expectDynamic(DynamicTokenType::CONSTANT);
+
+    return make_unique<Assignment>(
         assigneeVariable.getStringValue(),
         assignVariable.getStringValue(),
         getOperator(op),
@@ -95,15 +130,18 @@ std::unique_ptr<Assignment> Parser::parseAssignment(int line) {
     );
 }
 
-std::vector<std::unique_ptr<Statement>> LWParser::parse(std::vector<Token> tokensVec) {
-    setTokens(std::move(tokensVec));
-    return parseLW(tokens);
+
+vector<unique_ptr<Statement>>
+LWParser::parse(vector<Token> tokensVec) {
+    setTokens(move(tokensVec));
+    return parseLW();
 }
 
-std::vector<std::unique_ptr<Statement>> LWParser::parseLW(std::vector<Token>& /*unused_tokens_ref*/) {
-    std::vector<std::unique_ptr<Statement>> statements;
+vector<unique_ptr<Statement>> LWParser::parseLW() {
+    vector<unique_ptr<Statement>> statements;
+
     while (!isAtEnd()) {
-        Token currentToken = peek();
+        const Token& currentToken = peek();
         lastLine = currentToken.line;
 
         if (currentToken.isStatic()) {
@@ -111,160 +149,207 @@ std::vector<std::unique_ptr<Statement>> LWParser::parseLW(std::vector<Token>& /*
                 case StaticTokenType::LOOP:
                     statements.push_back(parseLoop());
                     break;
+
                 case StaticTokenType::WHILE:
                     statements.push_back(parseWhile());
                     break;
+
                 case StaticTokenType::END:
-                    parseEnd();
-                    break;
+                    return statements;
+
                 case StaticTokenType::SEMICOLON:
-                    expectStatic(StaticTokenType::SEMICOLON);
+                    consumeToken();
                     break;
+
                 default:
-                    throw std::runtime_error("Unexpected static token at line " + std::to_string(currentToken.line));
+                    throw runtime_error(
+                        "Unexpected static token at line " +
+                        to_string(currentToken.line));
             }
         } else if (currentToken.isDynamic()) {
-            statements.push_back(parseAssignment(currentToken.line));
+            statements.push_back(
+                parseAssignment(currentToken.line));
         } else {
-            throw std::runtime_error("Unexpected token at line " + std::to_string(currentToken.line));
+            throw runtime_error(
+                "Unexpected token at line " +
+                to_string(currentToken.line));
         }
-    }
-
-    if (!balancedIteration.empty() && !encounteredEnd) {
-        throw std::runtime_error("Missing END statement for opened LOOP/WHILE");
     }
 
     return statements;
 }
 
-std::unique_ptr<Loop> LWParser::parseLoop() {
+unique_ptr<Loop> LWParser::parseLoop() {
     balancedIteration.push_back(StaticTokenType::LOOP);
     expectStatic(StaticTokenType::LOOP);
-    Token& conditionToken = expectOneOfDynamic({DynamicTokenType::VARIABLE, DynamicTokenType::CONSTANT});
+
+    Token conditionToken = expectOneOfDynamic(
+        {DynamicTokenType::VARIABLE, DynamicTokenType::CONSTANT});
     expectStatic(StaticTokenType::DO);
 
-    return std::make_unique<Loop>(
-        conditionToken.getDynamic().type == DynamicTokenType::CONSTANT,
+    auto body = parseLW();
+    expectStatic(StaticTokenType::END);
+    validateSemicolon();
+
+    return make_unique<Loop>(
+        conditionToken.getDynamic().type ==
+            DynamicTokenType::CONSTANT,
         conditionToken.getDynamic().value,
-        parseLW(tokens),
+        move(body),
         conditionToken.line
     );
 }
 
-std::unique_ptr<While> LWParser::parseWhile() {
+unique_ptr<While> LWParser::parseWhile() {
     balancedIteration.push_back(StaticTokenType::WHILE);
     expectStatic(StaticTokenType::WHILE);
-    Token& variableToken = expectDynamic(DynamicTokenType::VARIABLE);
+
+    Token variableToken =
+        expectDynamic(DynamicTokenType::VARIABLE);
     expectStatic(StaticTokenType::GREATER_THAN);
-    Token& constantToken = expectDynamic(DynamicTokenType::CONSTANT);
+    Token constantToken =
+        expectDynamic(DynamicTokenType::CONSTANT);
     expectStatic(StaticTokenType::DO);
 
-    return std::make_unique<While>(
+    auto body = parseLW();
+    expectStatic(StaticTokenType::END);
+    validateSemicolon();
+
+    return make_unique<While>(
         variableToken.getDynamic().value,
-        std::stoi(constantToken.getDynamic().value),
-        parseLW(tokens),
+        stoi(constantToken.getDynamic().value),
+        move(body),
         variableToken.line
     );
 }
 
 void LWParser::parseEnd() {
-    if (!isBalancedStatementSequence({StaticTokenType::LOOP, StaticTokenType::WHILE})) {
-        throw std::runtime_error("Unmatched END statement");
+    if (!isBalancedStatementSequence(
+            {StaticTokenType::LOOP,
+             StaticTokenType::WHILE})) {
+        throw runtime_error("Unmatched END statement");
     }
     expectStatic(StaticTokenType::END);
-    encounteredEnd = true;
 }
 
 void LWParser::validateClosingSequence(int line) {
-    if (!isBalancedStatementSequence({StaticTokenType::LOOP, StaticTokenType::WHILE})) {
-        throw std::runtime_error("Unmatched END statement at line " + std::to_string(line));
+    if (!isBalancedStatementSequence(
+            {StaticTokenType::LOOP,
+             StaticTokenType::WHILE})) {
+        throw runtime_error(
+            "Unmatched END statement at line " +
+            to_string(line));
     }
 }
 
-bool LWParser::isBalancedStatementSequence(std::initializer_list<StaticTokenType> expectedTypes) {
-    bool found = false;
+bool LWParser::isBalancedStatementSequence(
+    initializer_list<StaticTokenType> expectedTypes) {
     for (const auto type : expectedTypes) {
-        if (!balancedIteration.empty() && balancedIteration.back() == type) {
+        if (!balancedIteration.empty() &&
+            balancedIteration.back() == type && encounteredEnd) {
             balancedIteration.pop_back();
-            found = true;
-            break;
+            return true;
         }
     }
-    return found;
+    return false;
 }
 
-/**
- * parse - Parses a vector of tokens of a GOTO program into a vector of Statements.
- * The function processes the tokens sequentially, identifying and constructing
- * different types of statements such as HALT, IF, and GOTO. It ensures that
- * all GOTO statements reference valid markers defined in the program.
- * @return A vector of unique pointers to Statements representing the parsed program.
- */
-std::vector<std::unique_ptr<Statement>> GOTOParser::parse(std::vector<Token> tokens) {
-    setTokens(std::move(tokens));
-    std::vector<std::unique_ptr<Statement>> statements;
+vector<unique_ptr<Statement>>
+GOTOParser::parse(vector<Token> tokensVec) {
+    containsHalt_ = false;
+    setTokens(move(tokensVec));
+    return parseGoto();
+}
+
+vector<unique_ptr<Statement>> GOTOParser::parseGoto() {
+    vector<unique_ptr<Statement>> statements;
 
     while (!isAtEnd()) {
-        Token currentToken = peek();
-        lastLine = currentToken.line;
+        const Token& first = peek();
+        int lineDifference = first.line - lastLine - 1;
+        for (int i = 0; i < lineDifference; ++i) {
+            statements.push_back(nullptr);
+        }
 
-        if (currentToken.isStatic()) {
-            switch (currentToken.getStatic().type) {
-                case StaticTokenType::HALT:
-                    statements.push_back(parseHalt(currentToken.line, -1));
-                    break;
+        Token marker = expectDynamic(DynamicTokenType::MARKER);
+        int markerLine = marker.line;
+        markerLineMap_[marker.getStringValue()] = markerLine;
+
+        expectStatic(StaticTokenType::COLON);
+
+        if (peek().isStatic()) {
+            switch (peek().getStatic().type) {
                 case StaticTokenType::IF:
-                    statements.push_back(parseIf(currentToken.line, -1));
+                    statements.push_back(
+                        parseIf(markerLine,
+                                marker.getIntValue()));
                     break;
+
                 case StaticTokenType::GOTO:
-                    statements.push_back(parseGotoStatement(currentToken.line, -1));
+                    statements.push_back(
+                        parseGotoStatement(markerLine,
+                                           marker.getIntValue()));
                     break;
-                case StaticTokenType::SEMICOLON:
-                    expectStatic(StaticTokenType::SEMICOLON);
+
+                case StaticTokenType::HALT:
+                    statements.push_back(
+                        parseHalt(markerLine,
+                                  marker.getIntValue()));
                     break;
+
                 default:
-                    throw std::runtime_error("Unexpected static token at line " + std::to_string(currentToken.line));
+                    throw runtime_error("Invalid GOTO statement");
             }
         } else {
-            throw std::runtime_error("Unexpected token at line " + std::to_string(currentToken.line));
+            statements.push_back(
+                parseAssignment(markerLine));
         }
+        validateSemicolon();
     }
 
     checkGotoValues();
-
     return statements;
 }
 
-std::unique_ptr<Halt> GOTOParser::parseHalt(int line, int markerLine) {
+unique_ptr<Halt>
+GOTOParser::parseHalt(int line, int markerLine) {
     expectStatic(StaticTokenType::HALT);
-    containsHalt = true;
-    return std::make_unique<Halt>(markerLine, line);
+    containsHalt_ = true;
+    return make_unique<Halt>(markerLine, line);
 }
 
-std::unique_ptr<If> GOTOParser::parseIf(int line, int markerLine) {
+unique_ptr<If>
+GOTOParser::parseIf(int line, int markerLine) {
     expectStatic(StaticTokenType::IF);
-    Token& variable = expectDynamic(DynamicTokenType::VARIABLE);
+    Token variable =
+        expectDynamic(DynamicTokenType::VARIABLE);
     expectStatic(StaticTokenType::EQUALS);
-    Token& constant = expectDynamic(DynamicTokenType::CONSTANT);
+    Token constant =
+        expectDynamic(DynamicTokenType::CONSTANT);
     expectStatic(StaticTokenType::THEN);
     expectStatic(StaticTokenType::GOTO);
+    Token gotoMarker =
+        expectDynamic(DynamicTokenType::MARKER);
 
-    Token& gotoMarker = expectDynamic(DynamicTokenType::MARKER);
-    return std::make_unique<If>(
+    gotoValuesMap_[gotoMarker.getStringValue()] = line;
+
+    return make_unique<If>(
         variable.getStringValue(),
         constant.getIntValue(),
-        gotoMarker.getDynamic().value,
+        gotoMarker.getStringValue(),
         markerLine,
         line
     );
 }
 
-std::unique_ptr<Goto> GOTOParser::parseGotoStatement(int line, int markerLine) {
+unique_ptr<Goto>
+GOTOParser::parseGotoStatement(int line, int markerLine) {
     expectStatic(StaticTokenType::GOTO);
-    Token& gotoMarker = expectDynamic(DynamicTokenType::MARKER);
-    gotoValuesMap.emplace(gotoMarker.getStringValue(), markerLine);
+    Token gotoMarker =
+        expectDynamic(DynamicTokenType::MARKER);
+    gotoValuesMap_[gotoMarker.getStringValue()] = line;
 
-    return std::make_unique<Goto>(
+    return make_unique<Goto>(
         gotoMarker.getStringValue(),
         markerLine,
         line
@@ -272,9 +357,17 @@ std::unique_ptr<Goto> GOTOParser::parseGotoStatement(int line, int markerLine) {
 }
 
 void GOTOParser::checkGotoValues() {
-    for (const auto& [gotoValue, markerLine] : gotoValuesMap) {
-        if (markerNumbers.find(std::stoi(gotoValue.substr(1))) == markerNumbers.end()) {
-            throw std::runtime_error("Undefined marker referenced in GOTO: " + gotoValue);
+    for (const auto& [markerName, gotoLine] : gotoValuesMap_) {
+        if (markerLineMap_.find(markerName) == markerLineMap_.end()) {
+            throw std::runtime_error(
+                "No line with goto marker value " + markerName +
+                " found (referenced at line " + std::to_string(gotoLine) + ")"
+            );
         }
     }
 }
+
+std::map<std::string, int> GOTOParser::getMarkerLineMap() {
+    return markerLineMap_;
+}
+
