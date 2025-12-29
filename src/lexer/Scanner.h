@@ -25,9 +25,9 @@
  */
 class Scanner {
 protected:
-    std::string source;             // Source code
-    std::vector<Token> tokens;      // Collected tokens
-    int currentLine = 1;            // Current line number
+    std::string source;
+    std::vector<Token> tokens;
+    int currentLine = 1;
 
     // Patterns for variable names and constants
     const std::regex IDENTIFIER{R"(x\d+)"}; // matches x1, x2, ...
@@ -35,12 +35,15 @@ protected:
 
 public:
     /**
-     * Constructor
+     * Move Constructor
      * @param src input source code
      *
      * Concepts:
      * - explicit to prevent implicit conversions
      * - std::move to efficiently move source string into member
+     *      - Avoids unnecessary copies
+     *      - Move constructor of std::string is used
+     * - RAII: std::string manages its own memory
      */
     explicit Scanner(std::string src)
         : source(std::move(src)) {
@@ -103,6 +106,8 @@ protected:
      *
      * Concepts:
      * - static member function
+     *      - Does not depend on instance state
+     *      - Can be called without an object
      * - std::string::find and substr
      */
     static std::string stripComments(const std::string &line) {
@@ -144,6 +149,8 @@ protected:
      * - std::regex_match for IDENTIFIER and CONSTANT
      * - std::stoi to convert string to integer
      * - emplace_back for efficient Token construction
+     *      - Appends new tokens to the end of the tokens vector
+     *      - Usually uses placement new to construct Token in place (std::allocator_traits::construct)
      */
     virtual bool matchToken(const std::string &word) {
         if (isKeyword(word)) {
@@ -168,13 +175,13 @@ protected:
 
     /**
      * Pure virtual function to check for keywords
-     * Implemented by derived classes
+     * Pure virtual function to be implemented by derived classes
      */
     virtual bool isKeyword(const std::string &word) = 0;
 
     /**
      * Pure virtual function to add a keyword token
-     * Implemented by derived classes
+     * Pure virtual function to be implemented by derived classes
      */
     virtual void addKeywordToken(const std::string &word) = 0;
 };
