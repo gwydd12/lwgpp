@@ -8,11 +8,11 @@
 
 – constness[2]
 
-– references[2]
+– ~~references~~
 
 – Ranged base for loops[2][6]
 
-– Strongly typed enums[2][6]
+– ~~Strongly typed enums~~
 
 – nullptr[2][6]
 
@@ -41,9 +41,9 @@
 
 • RAII related
 
-– RAII basics[12][2]
+– ~~RAII basics~~
 
-– Smart Pointer idiom[13]
+– ~~Smart Pointer idiom~~
 
 – Counted body idiom[14]
 
@@ -95,7 +95,7 @@
 
 ## Exceptions
 
-• Basic idea and handling[3][1]
+• Basic idea and handling
 
 • Exceptions avoid spreading out error logic[4][2]
 
@@ -103,7 +103,8 @@
 
 ## C++11++
 
- The Moving concept[2][1]
+~~The Moving concept~~
+
 • Variadic Templates[3][1]
 
 • Compile Time Ifs[4][1]
@@ -124,7 +125,7 @@
 
 * Constraints and concepts[2][1]
 
-* Type safe C++ (video for exercise)[3]
+* ~~Type safe C++ (video for exercise)[3]~~
 
 ## Meta Programming
 
@@ -167,8 +168,8 @@ std::bind
 std::function
 - Concept and use[7][8][2]
 
-std::Variant
-- Concept and use[7][8][2]
+~~std::Variant~~
+- Concept and use
 
 boost::Signal2
 - Concept and use[7][8][2]
