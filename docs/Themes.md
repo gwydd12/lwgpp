@@ -124,7 +124,7 @@
 
 * Constraints and concepts[2][1]
 
-* Type safe C++ (video for exercise)[3]
+* ~~Type safe C++ (video for exercise)[3]~~
 
 ## Meta Programming
 
