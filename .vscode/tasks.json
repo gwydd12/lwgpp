@@ -1,0 +1,39 @@
+{
+    "tasks": [
+        {
+            "type": "cppbuild",
+            "label": "C/C++: g++.exe build active file",
+            "command": "C:/mingw64/bin/g++.exe",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-g",
+                "${workspaceFolder}/src/main.cpp",
+                "${workspaceFolder}/src/parser/Parser.cpp",
+                "${workspaceFolder}/src/token/Token.cpp",
+                "${workspaceFolder}/src/error/ErrorHandler.cpp",
+                "${workspaceFolder}/src/lexer/Scanner.cpp",
+                "${workspaceFolder}/src/lexer/LwScanner.cpp",
+                "${workspaceFolder}/src/lexer/GotoScanner.cpp",
+                "${workspaceFolder}/src/interpreter/LWInterpreter.cpp",
+                "${workspaceFolder}/src/interpreter/Interpreter.cpp",
+                "${workspaceFolder}/src/interpreter/GotoInterpreter.cpp",
+                "${workspaceFolder}/src/interpreter/Environment.cpp",
+                "${workspaceFolder}/src/ast/Statement.cpp",
+                "-o",
+                "${workspaceFolder}\\src\\lwgpp.exe"
+            ],
+            "options": {
+                "cwd": "C:/mingw64/bin"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Task adjusted to build src/main.cpp"
+        }
+    ],
+    "version": "2.0.0"
+}

@@ -4,6 +4,26 @@
 #include <string>
 #include <variant>
 
+/**
+ * Token definitions for the lexer and parser
+ *
+ * Responsibilities:
+ * - Define static and dynamic token types
+ * - Provide a Token struct that can hold either type
+ * - Offer utility methods for token type checking and value retrieval
+ *
+ * Concepts used:
+ * - auto keyword for type inference
+ * - enum class for strong type safety
+ * - std::variant for type-safe union of static and dynamic tokens (2 different types)
+ * - std::string for dynamic token values 
+ * - std::move to cast arguments to rvalue references and use move constructor
+ * - std::runtime_error for exception handling
+ * - std::holds_alternative to check the type held by std::variant
+ * - std::get_if to safely retrieve the value from std::variant
+ * - Exception handling for invalid token access
+ */
+
 enum class TokenCategory {STATIC, DYNAMIC};
 enum class StaticTokenType {
     LOOP,
@@ -30,14 +50,12 @@ enum class DynamicTokenType {
 
 struct DynamicToken {
     DynamicTokenType type;
-    std::string value;
-
+    std::string value; 
     DynamicToken(const DynamicTokenType t, std::string v): type(t), value(std::move(v)) {}
 };
 
 struct StaticToken {
     StaticTokenType type;
-
     explicit StaticToken(const StaticTokenType t): type(t) {}
 };
 
@@ -47,7 +65,7 @@ struct StaticToken {
  * We use std::variant to represent a type-safe union of the two categories. (https://en.cppreference.com/w/cpp/utility/variant.html
  */
 struct Token {
-    std::variant<StaticToken, DynamicToken> value;
+    std::variant<StaticToken, DynamicToken> value; // std::variant applied here
     int line;
 
     Token(StaticToken staticType, const int l): value(staticType), line(l) {}
@@ -60,6 +78,12 @@ struct Token {
     [[nodiscard]] bool isStatic() const { return std::holds_alternative<StaticToken>(value); }
     [[nodiscard]] bool isDynamic() const { return std::holds_alternative<DynamicToken>(value); }
 
+    /* 
+    * Concept: Type-based std::get_if is used to safely retrieve the value from the variant.
+               std::get_if returns a pointer to the value if it holds the requested type, or nullptr otherwise.
+    */ 
+
+    // Returns the StaticToken if the token is static; otherwise, throws an error.
     [[nodiscard]] StaticToken getStatic() const {
         if (auto* st = std::get_if<StaticToken>(&value)) {
             return *st;
@@ -67,6 +91,7 @@ struct Token {
         throw std::runtime_error("Expected static token");
     }
 
+    // Returns the DynamicToken if the token is dynamic; otherwise, throws an error.
     [[nodiscard]] DynamicToken getDynamic() const {
         if (auto* dt = std::get_if<DynamicToken>(&value)) {
             return *dt;
@@ -74,10 +99,12 @@ struct Token {
         throw std::runtime_error("Expected dynamic token");
     }
 
+    // Returns the string value of a dynamic token.
     [[nodiscard]] std::string getStringValue() const {
         return getDynamic().value;
     }
 
+    // Converts the string value of a dynamic token to an integer.
     [[nodiscard]] int getIntValue() const {
         try {
             return std::stoi(getDynamic().value);

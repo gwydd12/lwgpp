@@ -12,14 +12,31 @@
 #include <initializer_list>
 #include <map>
 
+/**
+ * Parser definitions for the GOTO and LW languages
+ *
+ * Responsibilities:
+ * - Define a base Parser class with common parsing utilities
+ * - Implement GOTOParser and LWParser derived classes for specific language parsing
+ * - Provide methods to parse different statement types and validate syntax
+ */
+
 class Parser {
 protected:
+
+    /*
+    * std::deque container is used to store tokens since it provides 
+    * efficient pop_front operation(O(1)) in consumeToken() function 
+    * as compared to std::vector (O(n)) 
+    */
     std::deque<Token> tokens;
-    int lastLine = 1;
+    int lastLine = 1; // Tracks the line number of the last processed token for GoTOParser
 
     [[nodiscard]] bool isAtEnd() const;
     [[nodiscard]] const Token& peek() const;
     Token consumeToken();
+
+    // std::initializer_list used for passing a list of expected types
 
     Token expectDynamic(DynamicTokenType expectedType);
     Token expectStatic(StaticTokenType expectedType);
@@ -27,16 +44,27 @@ protected:
     Token expectOneOfDynamic(std::initializer_list<DynamicTokenType> types);
 
     void skipToNextLine();
-    void validateSemicolon();
+    void validateSemicolon(); // Ensures a semicolon follows the current statement
     void setTokens(std::vector<Token> t);
 
-    std::unique_ptr<Assignment> parseAssignment(int line);
+    std::unique_ptr<Assignment> parseAssignment(int line); 
 
 public:
     virtual ~Parser() = default;
     virtual std::vector<std::unique_ptr<Statement>>
     parse(std::vector<Token> tokens) = 0;
 };
+
+/*
+    * Use of unique ptr (smart pointer) for the different statement types
+    * Ensures proper memory management and avoids memory leaks
+    * 
+    * std::vector is used to hold smart pointers to statements for
+    * dynamic sizing
+    * 
+    * Inheritance for code reuse and specialization
+    * Polymorphism for dynamic method resolution
+*/
 
 class LWParser final : public Parser {
 public:
@@ -52,6 +80,7 @@ private:
     std::unique_ptr<While> parseWhile();
     void parseEnd();
     void validateClosingSequence(int line);
+
     bool isBalancedStatementSequence(
         std::initializer_list<StaticTokenType> expectedTypes
     );
@@ -65,7 +94,7 @@ public:
     std::map<std::string, int> getMarkerLineMap();
 
 private:
-    std::unordered_set<int> markerNumbers_;
+    std::unordered_set<int> markerNumbers_;  // Concept: unordered_set to track unique marker numbers
     std::map<std::string, int> gotoValuesMap_;
     std::map<std::string, int> markerLineMap_;
     bool containsHalt_ = false;

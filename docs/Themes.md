@@ -2,21 +2,21 @@
 
 ## Fundamentals
 
-– Initialization[2][6]
+– Initialization
 
 – Delegating constructors[2][6]
 
-– constness[2]
+– constness
 
 – references[2]
 
-– Ranged base for loops[2][6]
+– Ranged base for loops
 
-– Strongly typed enums[2][6]
+– Strongly typed enums
 
-– nullptr[2][6]
+– nullptr
 
-– auto[2][6]
+– auto
 
 – decltype[2][6]
 
@@ -41,9 +41,9 @@
 
 • RAII related
 
-– RAII basics[12][2]
+– RAII basics
 
-– Smart Pointer idiom[13]
+– Smart Pointer idiom
 
 – Counted body idiom[14]
 
@@ -57,7 +57,7 @@
 
 • Basic Template Terminology[16, chap. 10][3]
 
-• Virtual Member functions[16, chap. 12.1.1][3]
+• Virtual Member functions
 
 • Name Taxonomy[16, chap. 13.1][3]
 
@@ -79,9 +79,9 @@
 
 ## STL Containers
 
-– Sequence containers[6, chap. 22.3][1][3]
+– Sequence containers
 
-– Associative containers[6, chap. 22.4][1][3]
+– Associative containers
 
 – Container adapters[6, chap. 22.4][1][3]
 
@@ -91,19 +91,20 @@
 
 ## STL Algorithms
 
-- STL Algorithms - Concept and different algorithms[8, chap. 22.5][2]
+- STL Algorithms - Concept and different algorithms
 
 ## Exceptions
 
-• Basic idea and handling[3][1]
+• Basic idea and handling
 
 • Exceptions avoid spreading out error logic[4][2]
 
-• Exception-Safety[5][6][7][8][2]
+• Exception-Safety
 
 ## C++11++
 
- The Moving concept[2][1]
+ The Moving concept
+ 
 • Variadic Templates[3][1]
 
 • Compile Time Ifs[4][1]
@@ -168,7 +169,7 @@ std::function
 - Concept and use[7][8][2]
 
 std::Variant
-- Concept and use[7][8][2]
+- Concept and use
 
 boost::Signal2
 - Concept and use[7][8][2]

@@ -21,17 +21,16 @@ M7: Goto M4;
 M8: Halt
     )";
     std::string LWSourceCode = R"(
-    x0 = x0 + 3;
+    x0 = x0 + 3; // 3
     x1 = x1 + 2;
-
-    x1 = x1 - 1;
-    x9 = x0 + 0;
+    x1 = x1 - 1; // 1
+    x9 = x0 + 0; // 3
     Loop x1 Do
       Loop x9 Do
-        x0 = x0 + 1;
+        x0 = x0 + 1; // 6
       End;
     End
-        )";
+        )"; // output should be x0 = 6, x1 = 1, x9 = 3
     const auto lexer = std::make_unique<GotoScanner>(
         GotoSourceCode
     );
