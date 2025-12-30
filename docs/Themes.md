@@ -2,48 +2,48 @@
 
 ## Fundamentals
 
-– Initialization[2][6]
+– ~~Initialization[2][6]~~
 
-– Delegating constructors[2][6]
+– ~~Delegating constructors[2][6]~~
 
-– constness[2]
+– ~~constness[2]~~
 
-– ~~references~~
+– ~~references[2]~~
 
-– Ranged base for loops[2][6]
+– ~~Ranged base for loops[2][6]~~
 
-– ~~Strongly typed enums~~
+– ~~Strongly typed enums[2][6]~~
 
 – nullptr[2][6]
 
-– auto[2][6]
+– ~~auto[2][6]~~
 
-– decltype[2][6]
+– ~~decltype[2][6]~~
 
 
 • Statics
 
-– In a class[7][2]
+– ~~In a class[7][2]~~
 
-– Other uses (parts related to static)[8][2]
+– ~~Other uses (parts related to static)[8][2]~~
 
-• Conversion - implicit & explicit
+• ~~Conversion - implicit & explicit~~
 
-– Conversions and casts[9][2]
+– ~~Conversions and casts[9][2]~~
 
 – GotW 19 - Automatic conversions[10][2]
 
-• Overloading basics[11][2]
+• ~~Overloading basics[11][2]~~
 
 • Functors[2]
 
 • Lambdas[6] Includes generic lambdas
 
-• RAII related
+• ~~RAII related~~
 
-– ~~RAII basics~~
+– ~~RAII basics[12][2]~~
 
-– ~~Smart Pointer idiom~~
+– ~~Smart Pointer idiom[13]~~
 
 – Counted body idiom[14]
 
@@ -73,19 +73,19 @@
 
 • Namespaces[4]
 
-• Overload resolution[4][16, app. C.1-C.3.3]
+• ~~Overload resolution[4][16, app. C.1-C.3.3]~~
 
-• Name lookup & ADL[4][16, chap. 13.2, 13.2.1]
+• ~~Name lookup~~ & ADL[4][16, chap. 13.2, 13.2.1]
 
 ## STL Containers
 
-– Sequence containers[6, chap. 22.3][1][3]
+– ~~Sequence containers[6, chap. 22.3][1][3]~~
 
-– Associative containers[6, chap. 22.4][1][3]
+– ~~Associative containers[6, chap. 22.4][1][3]~~
 
-– Container adapters[6, chap. 22.4][1][3]
+– ~~Container adapters[6, chap. 22.4][1][3]~~
 
-– Iterator helper template class[4]
+– ~~Iterator helper template class[4]~~
 
 – Simple example for linked list iterator[5]
 
@@ -95,19 +95,18 @@
 
 ## Exceptions
 
-• Basic idea and handling
+• ~~Basic idea and handling[3][1]~~
 
 • Exceptions avoid spreading out error logic[4][2]
 
-• Exception-Safety[5][6][7][8][2]
+• ~~Exception-Safety[5][6][7][8][2]~~
 
 ## C++11++
 
-~~The Moving concept~~
-
+ ~~The Moving concept[2][1]~~
 • Variadic Templates[3][1]
 
-• Compile Time Ifs[4][1]
+• ~~Compile Time Ifs[4][1]~~
 
 • Threading[5][1]
 
@@ -150,7 +149,7 @@
 – Boost MPL Vector[3]
 
 – Boost MPL if[4]
-
+MPL
 – Boost MPL if_c[5]
 
 – Boost MPL bool_[6]
@@ -169,7 +168,7 @@ std::function
 - Concept and use[7][8][2]
 
 ~~std::Variant~~
-- Concept and use
+- Concept and use[7][8][2]
 
 boost::Signal2
 - Concept and use[7][8][2]
