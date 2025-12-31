@@ -1,10 +1,8 @@
 #include "GotoParser.h"
 
-
-std::vector<std::unique_ptr<Statement>>
-GOTOParser::parse(std::vector<Token> tokensVec) {
+std::vector<std::unique_ptr<Statement>> GOTOParser::parse(std::vector<Token> toks) {
     containsHalt_ = false;
-    setTokens(move(tokensVec));
+    setTokens(std::move(toks));
     return parseGoto();
 }
 
@@ -99,6 +97,9 @@ GOTOParser::parseGotoStatement(int line, int markerLine) {
     );
 }
 
+/**
+ *
+ */
 void GOTOParser::checkGotoValues() {
     for (const auto& [markerName, gotoLine] : gotoValuesMap_) {
         if (markerLineMap_.find(markerName) == markerLineMap_.end()) {
@@ -110,6 +111,11 @@ void GOTOParser::checkGotoValues() {
     }
 }
 
+/**
+ * Allows for retrieval of the marker to line number mapping.
+ *
+ * @return Map of marker and their corresponding line numbers
+ */
 std::map<std::string, int> GOTOParser::getMarkerLineMap() {
     return markerLineMap_;
 }

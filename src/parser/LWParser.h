@@ -8,17 +8,17 @@ public:
     parse(std::vector<Token> tokens) override;
 
 private:
-    std::deque<StaticTokenType> balancedIteration;
+    std::deque<Token> balancedIteration;
     bool encounteredEnd = false;
 
     std::vector<std::unique_ptr<Statement>> parseLW();
     std::unique_ptr<Loop> parseLoop();
     std::unique_ptr<While> parseWhile();
     void parseEnd();
-    void validateClosingSequence(int line);
-    bool isBalancedStatementSequence(
-        std::initializer_list<StaticTokenType> expectedTypes
-    );
+    void validateClosingSequence(int line) const;
+
+    template<typename TokenCategory, TokenCategory... Expected>
+    bool isBalanced();
 };
 
 #endif //LWGPP_LWPARSER_H

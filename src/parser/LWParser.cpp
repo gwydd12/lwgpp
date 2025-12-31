@@ -61,8 +61,7 @@ std::vector<std::unique_ptr<Statement>> LWParser::parseLW() {
 }
 
 std::unique_ptr<Loop> LWParser::parseLoop() {
-    balancedIteration.push_back(StaticTokenType::LOOP);
-    expectAndConsumeToken<StaticTokenType, StaticTokenType::LOOP>();
+    balancedIteration.push_back(expectAndConsumeToken<StaticTokenType, StaticTokenType::LOOP>());
     const Token& conditionToken = expectAndConsumeToken<
         DynamicTokenType,
         DynamicTokenType::VARIABLE,
@@ -81,9 +80,8 @@ std::unique_ptr<Loop> LWParser::parseLoop() {
 }
 
 std::unique_ptr<While> LWParser::parseWhile() {
-    balancedIteration.push_back(StaticTokenType::WHILE);
+    balancedIteration.push_back(expectAndConsumeToken<StaticTokenType, StaticTokenType::WHILE>());
 
-    expectAndConsumeToken<StaticTokenType, StaticTokenType::WHILE>();
     const Token& variableToken = expectAndConsumeToken<DynamicTokenType, DynamicTokenType::VARIABLE>();
     expectAndConsumeToken<StaticTokenType, StaticTokenType::GREATER_THAN>();
     const Token& constantToken = expectAndConsumeToken<DynamicTokenType, DynamicTokenType::CONSTANT>();
@@ -98,36 +96,28 @@ std::unique_ptr<While> LWParser::parseWhile() {
     );
 }
 
-bool LWParser::isBalancedStatementSequence(
-    std::initializer_list<StaticTokenType> expectedTypes
-) {
-    if (balancedIteration.empty()) {
-        return false;
-    }
-
-    StaticTokenType lastOpened = balancedIteration.back();
-    if (std::find(expectedTypes.begin(), expectedTypes.end(), lastOpened) != expectedTypes.end()) {
+template<typename TokenCategory, TokenCategory... Expected>
+bool LWParser::isBalanced() {
+    if (balancedIteration.empty()) return false;
+    if (const Token& token = balancedIteration.back(); (... || (token.is<TokenCategory, Expected>()))) {
         balancedIteration.pop_back();
         return true;
     }
-
     return false;
 }
 
 void LWParser::parseEnd() {
-    if (!isBalancedStatementSequence(
-            {StaticTokenType::LOOP,
-             StaticTokenType::WHILE})) {
+    if (!isBalanced< StaticTokenType,
+            StaticTokenType::LOOP,
+            StaticTokenType::WHILE>()) {
         throw std::runtime_error("Unmatched END statement");
     }
     expectAndConsumeToken<StaticTokenType, StaticTokenType::END>();
     encounteredEnd = true;
 }
 
-void LWParser::validateClosingSequence(const int line) {
-    if (isBalancedStatementSequence(
-            {StaticTokenType::LOOP,
-             StaticTokenType::WHILE})) {
+void LWParser::validateClosingSequence(const int line) const {
+    if (!balancedIteration.empty()) {
         throw std::runtime_error(
             "Unmatched END statement at line " +
             std::to_string(line));
