@@ -22,6 +22,7 @@ private:
     std::unique_ptr<If> parseIf(int line, int markerLine);
     std::unique_ptr<Goto> parseGotoStatement(int line, int markerLine);
     void checkGotoValues();
+    static void fillStatementsWithNops(std::vector<std::unique_ptr<Statement>> &statements, int firstLine, int lastLine);
 };
 
 

@@ -11,11 +11,7 @@ std::vector<std::unique_ptr<Statement>> GOTOParser::parseGoto() {
 
     while (!isAtEnd()) {
         const Token& first = peek();
-
-        const int lineDifference = first.line - lastLine - 1;
-        for (int i = 0; i < lineDifference; ++i) {
-            statements.push_back(nullptr);
-        }
+        fillStatementsWithNops(statements, first.line, lastLine); // Fill with NOPs as we need to keep track of empty lines
 
         const Token& marker = expectAndConsumeToken<DynamicTokenType, DynamicTokenType::MARKER>();
         const int markerLine = marker.line;
@@ -100,7 +96,7 @@ std::unique_ptr<Goto> GOTOParser::parseGotoStatement(int line, int markerLine) {
  */
 void GOTOParser::checkGotoValues() {
     for (const auto& [markerName, gotoLine] : gotoValuesMap_) {
-        if (markerLineMap_.find(markerName) == markerLineMap_.end()) {
+        if (!markerLineMap_.contains(markerName)) {
             throw std::runtime_error(
                 "No line with goto marker value " + markerName +
                 " found (referenced at line " + std::to_string(gotoLine) + ")"
@@ -116,4 +112,11 @@ void GOTOParser::checkGotoValues() {
  */
 std::map<std::string, int> GOTOParser::getMarkerLineMap() {
     return markerLineMap_;
+}
+
+void GOTOParser::fillStatementsWithNops(std::vector<std::unique_ptr<Statement>>& statements, const int firstLine, const int lastLine) {
+    const int lineDifference = firstLine - lastLine - 1;
+    for (int i = 0; i < lineDifference; ++i) {
+        statements.push_back(nullptr);
+    }
 }
