@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 4.0)
 project(lwgpp)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 add_executable(lwgpp src/main.cpp
         src/token/Token.cpp

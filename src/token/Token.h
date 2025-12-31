@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <string>
 #include <variant>
+#include <concepts>
 
 enum class StaticTokenType {
     LOOP,
@@ -55,7 +56,14 @@ struct TokenTypeTraits<DynamicTokenType> {
     using token_t = DynamicToken;
 };
 
-/**
+template <typename T>
+concept TokenCategory =
+    std::same_as<T, StaticTokenType> ||
+    std::same_as<T, DynamicTokenType>;
+
+template <typename T>
+concept TokenVariant = std::same_as<T, StaticToken> || std::same_as<T, DynamicToken>;
+/*
  * A Token can be either a static type or a dynamic type.
  * The static type does not carry a value, while the dynamic type does store a string value.
  * We use std::variant to represent a type-safe union of the two categories. (https://en.cppreference.com/w/cpp/utility/variant.html
@@ -64,64 +72,38 @@ struct Token {
     std::variant<StaticToken, DynamicToken> value;
     int line;
 
-    Token(StaticToken staticType, const int l): value(staticType), line(l) {}
-    Token(DynamicToken dynamicType, const int l): value(std::move(dynamicType)), line(l) {}
-    Token(StaticTokenType staticType, const int l): value(StaticToken(staticType)), line(l) {}
-    Token(DynamicTokenType dynamicType, std::string v, const int l): value(DynamicToken(dynamicType, std::move(v))), line(l) {}
+    Token(const StaticTokenType t, const int l) : value(StaticToken(t)), line(l) {}
+    Token(const DynamicTokenType t, std::string v, const int l) : value(DynamicToken(t, std::move(v))), line(l) {}
+    Token(StaticToken t, const int l) : value(t), line(l) {}
+    Token(DynamicToken t, const int l) : value(std::move(t)), line(l) {}
 
-    template <typename T>
+    template <TokenVariant Variant>
     [[nodiscard]] bool is() const {
-        return std::holds_alternative<T>(value);
+        return std::holds_alternative<Variant>(value);
     }
-
-    template <typename TokenCategory, TokenCategory T>
+    template <TokenCategory Category, Category T>
     [[nodiscard]] bool is() const {
-        using token_t = typename TokenTypeTraits<TokenCategory>::token_t;
+        using token_t = TokenTypeTraits<Category>::token_t;
 
         if (auto* ptr = std::get_if<token_t>(&value)) {
             return ptr->type == T;
         }
         return false;
     }
-
-    /**
-     * Retrieves the stored type (StaticToken or DynamicToken) from the variant.
-     *
-     * @tparam T Type to retrieve (StaticToken or DynamicToken)
-     * @return Reference to the stored type
-     */
-    template <typename T>
-    [[nodiscard]] const T& get() const {
-        if (auto* ptr = std::get_if<T>(&value)) {
-            return *ptr;
-        }
-
-        throw std::runtime_error("Type mismatch when accessing token value");
-    }
-
-    template <typename T>
-    [[nodiscard]] T getType() const {
-        using token_t = typename TokenTypeTraits<T>::token_t;
+    template <TokenVariant Variant>
+    const Variant& get() const;
+    template <TokenCategory Category>
+    Category getType() const {
+        using token_t = TokenTypeTraits<Category>::token_t;
 
         if (auto* ptr = std::get_if<token_t>(&value)) {
             return ptr->type;
         }
 
-        throw std::runtime_error(std::string("Token does not hold ") + TokenTypeTraits<T>::name);
+        throw std::runtime_error(std::string("Token does not hold ") + TokenTypeTraits<Category>::name);
     }
-
-
-    [[nodiscard]] const std::string& getStringValue() const {
-        return get<DynamicToken>().value;
-    }
-
-    [[nodiscard]] int getIntValue() const {
-        try {
-            return std::stoi(get<DynamicToken>().value);
-        } catch (const std::invalid_argument& e) {
-            throw std::runtime_error("Invalid integer conversion: " + get<DynamicToken>().value);
-        }
-    }
+    [[nodiscard]] const std::string& getStringValue() const;
+    [[nodiscard]] int getIntValue() const;
 };
 
 

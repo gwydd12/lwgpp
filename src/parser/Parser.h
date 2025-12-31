@@ -22,14 +22,14 @@ protected:
     [[nodiscard]] const Token& peek() const;
     Token consumeToken();
 
-    template <typename TokenCategory, TokenCategory... TokenType>
+    template <TokenCategory Category, Category... TokenType>
     Token expectAndConsumeToken() {
         if (isAtEnd()) {
             throw std::runtime_error("Unexpected end of input.");
         }
 
         //Runtime check to verify that the next token matches one of the expected types.
-        if (const Token& currentToken = peek(); !(currentToken.is<TokenCategory, TokenType>() || ...)) {
+        if (const Token& currentToken = peek(); !(currentToken.is<Category, TokenType>() || ...)) {
             throw std::runtime_error("Unexpected token type.");
         }
 

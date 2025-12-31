@@ -11,6 +11,7 @@ std::vector<std::unique_ptr<Statement>> GOTOParser::parseGoto() {
 
     while (!isAtEnd()) {
         const Token& first = peek();
+
         const int lineDifference = first.line - lastLine - 1;
         for (int i = 0; i < lineDifference; ++i) {
             statements.push_back(nullptr);
@@ -56,15 +57,13 @@ std::vector<std::unique_ptr<Statement>> GOTOParser::parseGoto() {
     return statements;
 }
 
-std::unique_ptr<Halt>
-GOTOParser::parseHalt(int line, int markerLine) {
+std::unique_ptr<Halt> GOTOParser::parseHalt(int line, int markerLine) {
     expectAndConsumeToken<StaticTokenType, StaticTokenType::HALT>();
     containsHalt_ = true;
     return std::make_unique<Halt>(markerLine, line);
 }
 
-std::unique_ptr<If>
-GOTOParser::parseIf(int line, int markerLine) {
+std::unique_ptr<If> GOTOParser::parseIf(int line, int markerLine) {
     expectAndConsumeToken<StaticTokenType, StaticTokenType::IF>();
     const Token& variable = expectAndConsumeToken<DynamicTokenType, DynamicTokenType::VARIABLE>();
     expectAndConsumeToken<StaticTokenType, StaticTokenType::EQUALS>();
@@ -84,8 +83,7 @@ GOTOParser::parseIf(int line, int markerLine) {
     );
 }
 
-std::unique_ptr<Goto>
-GOTOParser::parseGotoStatement(int line, int markerLine) {
+std::unique_ptr<Goto> GOTOParser::parseGotoStatement(int line, int markerLine) {
     expectAndConsumeToken<StaticTokenType, StaticTokenType::GOTO>();
     const Token& gotoMarker = expectAndConsumeToken<DynamicTokenType, DynamicTokenType::MARKER>();
     gotoValuesMap_[gotoMarker.getStringValue()] = line;
