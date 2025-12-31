@@ -6,6 +6,7 @@
 #include "interpreter/LWInterpreter.h"
 #include "lexer/GotoScanner.h"
 #include "lexer/LwScanner.h"
+#include "parser/GotoParser.h"
 #include "parser/Parser.h"
 #include "token/Token.h"
 
@@ -37,7 +38,7 @@ M8: Halt
     );
 
     std::vector<Token> const tokens = lexer->scanProgram();
-    const auto parser = std::make_unique<GOTOParser>();
+    const auto parser = std::make_unique<GotoParser>();
 
     const auto stmts = parser->parse(tokens);
     std::cout << "Parsed " << stmts.size() << " statements." << std::endl;

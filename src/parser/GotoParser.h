@@ -4,7 +4,7 @@
 #include <unordered_set>
 #include "Parser.h"
 
-class GOTOParser final : public Parser {
+class GotoParser final : public Parser {
 public:
     std::vector<std::unique_ptr<Statement>>
     parse(std::vector<Token> tokens) override;

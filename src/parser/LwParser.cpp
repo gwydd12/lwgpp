@@ -1,9 +1,9 @@
-#include "LWParser.h"
+#include "LwParser.h"
 
 #include <algorithm>
 
 std::vector<std::unique_ptr<Statement>>
-LWParser::parse(std::vector<Token> tokensVec) {
+LwParser::parse(std::vector<Token> tokensVec) {
     setTokens(std::move(tokensVec));
     encounteredEnd = false;
     auto statements = parseLW();
@@ -11,7 +11,7 @@ LWParser::parse(std::vector<Token> tokensVec) {
     return statements;
 }
 
-std::vector<std::unique_ptr<Statement>> LWParser::parseLW() {
+std::vector<std::unique_ptr<Statement>> LwParser::parseLW() {
     std::vector<std::unique_ptr<Statement>> statements;
 
     while (!isAtEnd()) {
@@ -60,7 +60,7 @@ std::vector<std::unique_ptr<Statement>> LWParser::parseLW() {
     return statements;
 }
 
-std::unique_ptr<Loop> LWParser::parseLoop() {
+std::unique_ptr<Loop> LwParser::parseLoop() {
     balancedIteration.push_back(expectAndConsumeToken<StaticTokenType, StaticTokenType::LOOP>());
     const Token& conditionToken = expectAndConsumeToken<
         DynamicTokenType,
@@ -79,7 +79,7 @@ std::unique_ptr<Loop> LWParser::parseLoop() {
     );
 }
 
-std::unique_ptr<While> LWParser::parseWhile() {
+std::unique_ptr<While> LwParser::parseWhile() {
     balancedIteration.push_back(expectAndConsumeToken<StaticTokenType, StaticTokenType::WHILE>());
 
     const Token& variableToken = expectAndConsumeToken<DynamicTokenType, DynamicTokenType::VARIABLE>();
@@ -97,7 +97,7 @@ std::unique_ptr<While> LWParser::parseWhile() {
 }
 
 template<typename TokenCategory, TokenCategory... Expected>
-bool LWParser::isBalanced() {
+bool LwParser::isBalanced() {
     if (balancedIteration.empty()) return false;
     if (const Token& token = balancedIteration.back(); (... || (token.is<TokenCategory, Expected>()))) {
         balancedIteration.pop_back();
@@ -106,7 +106,7 @@ bool LWParser::isBalanced() {
     return false;
 }
 
-void LWParser::parseEnd() {
+void LwParser::parseEnd() {
     if (!isBalanced< StaticTokenType,
             StaticTokenType::LOOP,
             StaticTokenType::WHILE>()) {
@@ -116,7 +116,7 @@ void LWParser::parseEnd() {
     encounteredEnd = true;
 }
 
-void LWParser::validateClosingSequence(const int line) const {
+void LwParser::validateClosingSequence(const int line) const {
     if (!balancedIteration.empty()) {
         throw std::runtime_error(
             "Unmatched END statement at line " +

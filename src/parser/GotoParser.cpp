@@ -1,12 +1,12 @@
 #include "GotoParser.h"
 
-std::vector<std::unique_ptr<Statement>> GOTOParser::parse(std::vector<Token> toks) {
+std::vector<std::unique_ptr<Statement>> GotoParser::parse(std::vector<Token> toks) {
     containsHalt_ = false;
     setTokens(std::move(toks));
     return parseGoto();
 }
 
-std::vector<std::unique_ptr<Statement>> GOTOParser::parseGoto() {
+std::vector<std::unique_ptr<Statement>> GotoParser::parseGoto() {
     std::vector<std::unique_ptr<Statement>> statements;
 
     while (!isAtEnd()) {
@@ -53,13 +53,13 @@ std::vector<std::unique_ptr<Statement>> GOTOParser::parseGoto() {
     return statements;
 }
 
-std::unique_ptr<Halt> GOTOParser::parseHalt(int line, int markerLine) {
+std::unique_ptr<Halt> GotoParser::parseHalt(int line, int markerLine) {
     expectAndConsumeToken<StaticTokenType, StaticTokenType::HALT>();
     containsHalt_ = true;
     return std::make_unique<Halt>(markerLine, line);
 }
 
-std::unique_ptr<If> GOTOParser::parseIf(int line, int markerLine) {
+std::unique_ptr<If> GotoParser::parseIf(int line, int markerLine) {
     expectAndConsumeToken<StaticTokenType, StaticTokenType::IF>();
     const Token& variable = expectAndConsumeToken<DynamicTokenType, DynamicTokenType::VARIABLE>();
     expectAndConsumeToken<StaticTokenType, StaticTokenType::EQUALS>();
@@ -79,7 +79,7 @@ std::unique_ptr<If> GOTOParser::parseIf(int line, int markerLine) {
     );
 }
 
-std::unique_ptr<Goto> GOTOParser::parseGotoStatement(int line, int markerLine) {
+std::unique_ptr<Goto> GotoParser::parseGotoStatement(int line, int markerLine) {
     expectAndConsumeToken<StaticTokenType, StaticTokenType::GOTO>();
     const Token& gotoMarker = expectAndConsumeToken<DynamicTokenType, DynamicTokenType::MARKER>();
     gotoValuesMap_[gotoMarker.getStringValue()] = line;
@@ -94,7 +94,7 @@ std::unique_ptr<Goto> GOTOParser::parseGotoStatement(int line, int markerLine) {
 /**
  *
  */
-void GOTOParser::checkGotoValues() {
+void GotoParser::checkGotoValues() {
     for (const auto& [markerName, gotoLine] : gotoValuesMap_) {
         if (!markerLineMap_.contains(markerName)) {
             throw std::runtime_error(
@@ -110,11 +110,11 @@ void GOTOParser::checkGotoValues() {
  *
  * @return Map of marker and their corresponding line numbers
  */
-std::map<std::string, int> GOTOParser::getMarkerLineMap() {
+std::map<std::string, int> GotoParser::getMarkerLineMap() {
     return markerLineMap_;
 }
 
-void GOTOParser::fillStatementsWithNops(std::vector<std::unique_ptr<Statement>>& statements, const int firstLine, const int lastLine) {
+void GotoParser::fillStatementsWithNops(std::vector<std::unique_ptr<Statement>>& statements, const int firstLine, const int lastLine) {
     const int lineDifference = firstLine - lastLine - 1;
     for (int i = 0; i < lineDifference; ++i) {
         statements.push_back(nullptr);
