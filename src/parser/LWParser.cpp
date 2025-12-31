@@ -5,7 +5,10 @@
 std::vector<std::unique_ptr<Statement>>
 LWParser::parse(std::vector<Token> tokensVec) {
     setTokens(std::move(tokensVec));
-    return parseLW();
+    encounteredEnd = false;
+    auto statements = parseLW();
+    validateClosingSequence(lastLine);
+    return statements;
 }
 
 std::vector<std::unique_ptr<Statement>> LWParser::parseLW() {
@@ -26,8 +29,9 @@ std::vector<std::unique_ptr<Statement>> LWParser::parseLW() {
                     break;
 
                 case StaticTokenType::END:
-                    //parseEnd();
-                    //validateSemicolon();
+                    parseEnd();
+                    validateSemicolon();
+                    encounteredEnd = true;
                     return statements;
 
                 case StaticTokenType::SEMICOLON:
@@ -39,13 +43,17 @@ std::vector<std::unique_ptr<Statement>> LWParser::parseLW() {
                         "Unexpected static token at line " +
                         std::to_string(currentToken.line));
             }
-        } else if (currentToken.is<DynamicToken>()) {
-            statements.push_back(
-                parseAssignment(currentToken.line));
+        } else if (currentToken.is<DynamicTokenType, DynamicTokenType::VARIABLE>()) {
+            statements.push_back(parseAssignment(currentToken.line));
+            validateSemicolon();
         } else {
             throw std::runtime_error(
                 "Unexpected token at line " +
                 std::to_string(currentToken.line));
+        }
+        if (encounteredEnd) {
+            encounteredEnd = false;
+            break;
         }
     }
 
@@ -62,8 +70,6 @@ std::unique_ptr<Loop> LWParser::parseLoop() {
     >();
     expectAndConsumeToken<StaticTokenType, StaticTokenType::DO>();
     auto body = parseLW();
-    expectAndConsumeToken<StaticTokenType, StaticTokenType::END>();
-    validateSemicolon();
 
     bool isConstant = conditionToken.is<DynamicTokenType, DynamicTokenType::CONSTANT>();
     return std::make_unique<Loop>(
@@ -83,8 +89,6 @@ std::unique_ptr<While> LWParser::parseWhile() {
     const Token& constantToken = expectAndConsumeToken<DynamicTokenType, DynamicTokenType::CONSTANT>();
     expectAndConsumeToken<StaticTokenType, StaticTokenType::DO>();
     auto body = parseLW();
-    expectAndConsumeToken<StaticTokenType, StaticTokenType::END>();
-    validateSemicolon();
 
     return std::make_unique<While>(
         variableToken.getStringValue(),
@@ -117,10 +121,11 @@ void LWParser::parseEnd() {
         throw std::runtime_error("Unmatched END statement");
     }
     expectAndConsumeToken<StaticTokenType, StaticTokenType::END>();
+    encounteredEnd = true;
 }
 
 void LWParser::validateClosingSequence(const int line) {
-    if (!isBalancedStatementSequence(
+    if (isBalancedStatementSequence(
             {StaticTokenType::LOOP,
              StaticTokenType::WHILE})) {
         throw std::runtime_error(
