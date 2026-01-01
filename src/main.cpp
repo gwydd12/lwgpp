@@ -36,9 +36,10 @@ M8: Halt
     const auto lexer = std::make_unique<GotoScanner>(
         GotoSourceCode
     );
-
     std::vector<Token> const tokens = lexer->scanProgram();
-    const auto parser = std::make_unique<goto_parser::GotoParser>();
+
+    goto_parser::GotoParser gotoParser;
+    const auto parser = std::make_unique<goto_parser::GotoParser>(std::move(gotoParser)); // Using move semantics to transfer ownership
 
     const auto stmts = parser->parse(tokens);
     std::cout << "Parsed " << stmts.size() << " statements." << std::endl;

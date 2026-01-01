@@ -4,7 +4,7 @@ using namespace goto_parser;
 
 std::vector<std::unique_ptr<Statement>> GotoParser::parse(std::vector<Token> tokens) {
     containsHalt_ = false;
-    setTokens(std::move(tokens));
+    setTokens(std::move(tokens)); // the expression std::move(tokens) is an xvalue of type std::vector<Token> (no identity, can be moved from)
     return parseGoto();
 }
 
@@ -13,7 +13,7 @@ std::vector<std::unique_ptr<Statement>> GotoParser::parseGoto() {
 
     while (!isAtEnd()) {
         const Token& first = peek();
-        fillStatementsWithNops(statements, first.line, lastLine); // Fill with NOPs as we need to keep track of empty lines
+        fillStatementsWithNops(statements, first.line, lastLine);
 
         const Token& marker = expectAndConsumeToken<DynamicTokenType, DynamicTokenType::MARKER>();
         const int markerLine = marker.line;
