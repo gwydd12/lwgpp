@@ -39,7 +39,7 @@ enum class Operator {
  * - Exception-based error handling
  */
 inline Operator getOperator(const Token &token) {
-    if (!token.isStatic()) {
+    if (!token.is<StaticToken>()) {
         throw std::runtime_error("Token is not a static token.");
     }
 
