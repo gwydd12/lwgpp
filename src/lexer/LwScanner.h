@@ -33,7 +33,7 @@ private:
     /**
      * Static lookup table for keywords
      * - unordered_map: fast O(1) lookup
-     * - uses strongly typed enum TokenType
+     * - uses strongly typed enum StaticTokenType
      */
     static const std::unordered_map<std::string, StaticTokenType> KEYWORD_TABLE;
 
@@ -44,7 +44,7 @@ public:
      *
      * Concepts:
      * - explicit: prevents implicit conversion from string to LWScanner
-     * - delegates to base class constructor
+     * - delegates to base class constructor (move constructor in base class)
      */
     explicit LWScanner(const std::string &src)
         : Scanner(src) {
@@ -73,6 +73,7 @@ protected:
      *
      * Concepts:
      * - auto in if-initializer (C++17)
+     *     - auto deduces at compile-time the iterator type from unordered_map
      * - unordered_map lookup
      * - emplace_back: efficient in-place construction of tokens
      * - exception handling: throws std::invalid_argument
