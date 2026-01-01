@@ -38,7 +38,7 @@ M8: Halt
     );
 
     std::vector<Token> const tokens = lexer->scanProgram();
-    const auto parser = std::make_unique<GotoParser>();
+    const auto parser = std::make_unique<goto_parser::GotoParser>();
 
     const auto stmts = parser->parse(tokens);
     std::cout << "Parsed " << stmts.size() << " statements." << std::endl;

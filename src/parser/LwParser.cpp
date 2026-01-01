@@ -1,10 +1,10 @@
 #include "LwParser.h"
-
 #include <algorithm>
 
+using namespace lw_parser;
 std::vector<std::unique_ptr<Statement>>
-LwParser::parse(std::vector<Token> tokensVec) {
-    setTokens(std::move(tokensVec));
+LwParser::parse(std::vector<Token> tokens) {
+    setTokens(std::move(tokens));
     encounteredEnd = false;
     auto statements = parseLW();
     validateClosingSequence(lastLine);

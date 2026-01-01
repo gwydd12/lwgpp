@@ -1,8 +1,10 @@
 #include "GotoParser.h"
 
-std::vector<std::unique_ptr<Statement>> GotoParser::parse(std::vector<Token> toks) {
+using namespace goto_parser;
+
+std::vector<std::unique_ptr<Statement>> GotoParser::parse(std::vector<Token> tokens) {
     containsHalt_ = false;
-    setTokens(std::move(toks));
+    setTokens(std::move(tokens));
     return parseGoto();
 }
 
@@ -49,7 +51,7 @@ std::vector<std::unique_ptr<Statement>> GotoParser::parseGoto() {
         validateSemicolon();
     }
 
-    checkGotoValues();
+    validateGotoMarkerValues();
     return statements;
 }
 
@@ -92,9 +94,10 @@ std::unique_ptr<Goto> GotoParser::parseGotoStatement(int line, int markerLine) {
 }
 
 /**
+ * Validates that all Goto statements reference existing markers.
  *
  */
-void GotoParser::checkGotoValues() {
+void GotoParser::validateGotoMarkerValues() {
     for (const auto& [markerName, gotoLine] : gotoValuesMap_) {
         if (!markerLineMap_.contains(markerName)) {
             throw std::runtime_error(
