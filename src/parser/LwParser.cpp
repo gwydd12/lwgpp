@@ -99,11 +99,17 @@ std::unique_ptr<While> LwParser::parseWhile() {
 template<typename TokenCategory, TokenCategory... Expected>
 bool LwParser::isBalanced() {
     if (balancedIteration.empty()) return false;
-    if (const Token& token = balancedIteration.back(); (... || (token.is<TokenCategory, Expected>()))) {
-        balancedIteration.pop_back();
-        return true;
+    const Token& token = balancedIteration.back();
+
+    if constexpr (std::is_enum_v<TokenCategory>) {
+        if ((... || token.is<TokenCategory, Expected>())) {
+            balancedIteration.pop_back();
+            return true;
+        }
+        return false;
+    } else {
+        throw std::runtime_error("Invalid TokenCategory for isBalanced check");
     }
-    return false;
 }
 
 void LwParser::parseEnd() {
