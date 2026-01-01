@@ -32,6 +32,13 @@ struct DynamicToken {
     DynamicTokenType type;
     std::string value;
 
+    /**
+     * Perfect forwarding constructor for DynamicToken.
+     * Allows to keep the value category (lvalue/rvalue) of the argument.
+     * Depending on the value category of 'v', it will either copy or move the string into the member variable.
+     */
+    template <typename T>
+    DynamicToken(const DynamicTokenType t, T&& v): type(t), value(std::forward<T>(v)) {}
     DynamicToken(const DynamicTokenType t, std::string v): type(t), value(std::move(v)) {}
 };
 

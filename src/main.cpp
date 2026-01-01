@@ -38,8 +38,9 @@ M8: Halt
     );
     std::vector<Token> const tokens = lexer->scanProgram();
 
-    goto_parser::GotoParser gotoParser;
-    const auto parser = std::make_unique<goto_parser::GotoParser>(std::move(gotoParser)); // Using move semantics to transfer ownership
+    // Use move semantics to transfer ownership of the parser
+    // goto_parser::GotoParser is a prvalue (pure rvalue) now it implicitly calls the move constructor
+    const auto parser = std::make_unique<goto_parser::GotoParser>(goto_parser::GotoParser());
 
     const auto stmts = parser->parse(tokens);
     std::cout << "Parsed " << stmts.size() << " statements." << std::endl;
