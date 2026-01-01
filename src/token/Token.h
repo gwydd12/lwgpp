@@ -77,6 +77,8 @@ concept TokenVariant = std::same_as<T, StaticToken> || std::same_as<T, DynamicTo
  * A Token can be either a static type or a dynamic type.
  * The static type does not carry a value, while the dynamic type does store a string value.
  * We use std::variant to represent a type-safe union of the two categories. (https://en.cppreference.com/w/cpp/utility/variant.html
+ * It allows us to store either a StaticToken or a DynamicToken in a single Token instance safely.
+ * Additionally, we can differentiate between the two types at runtime using std::holds_alternative and std::get_if.
  */
 struct Token {
     std::variant<StaticToken, DynamicToken> value;

@@ -18,7 +18,14 @@ namespace lw_parser {
         void parseEnd();
         void validateClosingSequence(int line) const;
 
-        template<typename TokenCategory, TokenCategory... Expected>
+        /**
+         * SFINAE - Substitution Failure Is Not An Error
+         * We use SFINAE to enable this function only for enum types.
+         * This ensures that TokenCategory is an enum type at compile time.
+         * Better approach: Using concepts to constrain the template parameter.
+         */
+        template<typename TokenCategory, TokenCategory... Expected,
+                 std::enable_if_t<std::is_enum_v<TokenCategory>, int> = 0>
         bool isBalanced();
     };
 }

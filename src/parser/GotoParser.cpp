@@ -1,5 +1,8 @@
 #include "GotoParser.h"
 
+#include <functional>
+#include <unordered_map>
+
 using namespace goto_parser;
 
 std::vector<std::unique_ptr<Statement>> GotoParser::parse(std::vector<Token> tokens) {
@@ -22,27 +25,27 @@ std::vector<std::unique_ptr<Statement>> GotoParser::parseGoto() {
         expectAndConsumeToken<StaticTokenType, StaticTokenType::COLON>();
 
         if (peek().is<StaticToken>()) {
-            switch (peek().getType<StaticTokenType>()) {
-                case StaticTokenType::IF:
-                    statements.push_back(
-                        parseIf(markerLine,
-                                marker.getIntValue()));
-                    break;
+            // Router pattern to dispatch parsing based on the next token type
+            // Uses std::function to define a handler type for parsing different statements
+            // The Handler type takes the marker line and marker value as parameters and returns a unique_ptr to a Statement
+            // This could also be solved via switch statements.
+            using Handler = std::function<std::unique_ptr<Statement>(int markerLine, int markerValue)>;
 
-                case StaticTokenType::GOTO:
-                    statements.push_back(
-                        parseGotoStatement(markerLine,
-                                           marker.getIntValue()));
-                    break;
 
-                case StaticTokenType::HALT:
-                    statements.push_back(
-                        parseHalt(markerLine,
-                                  marker.getIntValue()));
-                    break;
+            std::unordered_map<StaticTokenType, Handler> router {
+                    { StaticTokenType::IF,   [this](const int ml, const int mv) { return parseIf(ml, mv); } },
+                    { StaticTokenType::GOTO, [this](const int ml, const int mv) { return parseGotoStatement(ml, mv); } },
+                    { StaticTokenType::HALT, [this](const int ml, const int mv) { return parseHalt(ml, mv); } },
+                };
 
-                default:
-                    throw std::runtime_error("Invalid GOTO statement");
+            // Dispatch to the appropriate parsing function based on the next token type
+            // It searches for the token type of the current token in the router map and
+            // calls the corresponding handler function if found.
+            const auto type = peek().getType<StaticTokenType>();
+            if (auto it = router.find(type); it != router.end()) {
+                statements.push_back(it->second(markerLine, marker.getIntValue()));
+            } else {
+                throw std::runtime_error("Invalid GOTO statement");
             }
         } else {
             statements.push_back(
