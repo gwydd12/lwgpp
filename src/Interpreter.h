@@ -26,6 +26,8 @@ public:
     using policy_type = Policy;
     using state_type  = typename Policy::State;
 
+    virtual ~InterpreterT() = default;
+
     // Own environment by value
     explicit InterpreterT(Environment env = {})
         : environment_(std::move(env)) {}
