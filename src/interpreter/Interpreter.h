@@ -1,9 +1,8 @@
 #ifndef LWGPP_INTERPRETER_H
 #define LWGPP_INTERPRETER_H
 
-#include "../src/interpreter/Environment.h"
-#include "../src/ast/Statement.h"
-
+#include "Environment.h"
+#include "../ast/Statement.h"
 #include <type_traits>
 #include <variant>
 #include <vector>
