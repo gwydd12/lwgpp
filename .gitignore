@@ -40,5 +40,11 @@
 # debug information files
 *.dwo
 
+# Build directory
+build/
+
+# VS Code settings
+.vscode/
+
 # Clion
 .idea/
