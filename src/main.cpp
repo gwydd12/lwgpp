@@ -8,7 +8,6 @@
 #include "lexer/LwScanner.h"
 #include "parser/GotoParser.h"
 #include "token/Token.h"
-#include "interpreter/Environment.h"
 #include "parser/LwParser.h"
 
 void testGotoInterpreter() {
@@ -35,7 +34,9 @@ void testGotoInterpreter() {
     const auto stmts = parser->parse(tokens);
     std::cout << "Parsed " << stmts.size() << " statements." << std::endl;
 
-    const auto interpreter = std::make_unique<lwgpp::interp::GotoInterpreter>(Environment{});
+    memory::TrackingMemoryResource memoryTracker{std::pmr::get_default_resource()};
+    Environment env{&memoryTracker};
+    const auto interpreter = std::make_unique<lwgpp::interp::GotoInterpreter>(env);
     interpreter->setMarkerLineMap(parser->getMarkerLineMap());
     interpreter->interpret(stmts);
 
@@ -43,6 +44,11 @@ void testGotoInterpreter() {
     std::cout << "Variables:" << std::endl;
     for (const auto& [var, value] : variables) {
         std::cout << var << " = " << value << std::endl;
+    }
+
+    if (const auto statsOpt = interpreter->environment().getMemoryStats(); statsOpt.has_value()) {
+        std::cout << "Memory Stats:" << std::endl;
+        std::cout << statsOpt.value() << std::endl;
     }
 }
 
@@ -59,16 +65,16 @@ void testLWInterpreter() {
       End;
     End
         )";
-    const auto lexer = std::make_unique<LWScanner>(
-        LWSourceCode
-    );
+
+    const auto lexer = std::make_unique<LWScanner>(LWSourceCode);
     std::vector<Token> const tokens = lexer->scanProgram();
-    
+
     const auto parser = std::make_unique<lw_parser::LwParser>();
     const auto stmts = parser->parse(tokens);
     std::cout << "Parsed " << stmts.size() << " statements." << std::endl;
 
-    Environment env{}; // initialise empty environment
+    memory::TrackingMemoryResource memoryTracker{std::pmr::get_default_resource()};
+    Environment env{&memoryTracker};
     auto interpreter = std::make_unique<lwgpp::interp::LWInterpreter>(std::move(env));
     //interpreter->setMarkerLineMap(parser->getMarkerLineMap());
     interpreter->interpret(stmts);
@@ -77,6 +83,11 @@ void testLWInterpreter() {
     std::cout << "Variables:" << std::endl;
     for (const auto& [var, value] : variables) {
         std::cout << var << " = " << value << std::endl;
+    }
+
+    if (const auto stats = interpreter->environment().getMemoryStats(); stats.has_value()) {
+        std::cout << "Memory Stats:" << std::endl;
+        std::cout << stats.value() << std::endl;
     }
 }
 
