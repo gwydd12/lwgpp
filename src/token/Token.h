@@ -51,6 +51,16 @@ struct StaticToken {
     explicit StaticToken(const StaticTokenType t): type(t) {}
 };
 
+/**
+ * Metaprogramming struct to map token categories to their names and types.
+ * We have two specializations: one for StaticTokenType and one for DynamicTokenType.
+ * This allows us to retrieve the corresponding token type and name based on the category.
+ * Those traits are used in the Token struct for type-safe access at runtime in the is and getType methods.
+ * Advanced concepts:
+ * - Template specialization (Full specialization)
+ * - Metaprogramming with traits
+ * - Fixed traits (cannot be overriden)
+ */
 template <typename>
 struct TokenTypeTraits;
 

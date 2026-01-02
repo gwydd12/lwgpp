@@ -96,13 +96,18 @@ std::unique_ptr<While> LwParser::parseWhile() {
     );
 }
 
+/**
+ * SFINAE - Substitution Failure Is Not An Error
+ * We use SFINAE to enable this function only for enum types.
+ * The type trait std::is_enum_v checks if TokenCategory is an enum type at compile time.
+ * In case you'll pass a non-enum type, the substitution will fail and this function will not be considered during overload resolution.
+ */
 template<typename TokenCategory, TokenCategory... Expected,
          std::enable_if_t<std::is_enum_v<TokenCategory>, int>>
 bool LwParser::isBalanced() {
     if (balancedIteration.empty()) return false;
 
-    const Token& token = balancedIteration.back();
-    if ((... || token.is<TokenCategory, Expected>())) {
+    if (const Token& token = balancedIteration.back(); (... || token.is<TokenCategory, Expected>())) {
         balancedIteration.pop_back();
         return true;
     }
