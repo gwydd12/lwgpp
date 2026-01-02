@@ -1,0 +1,14 @@
+# ninja log v7
+309	766	7889807027315773	CMakeFiles/lwgpp.dir/src/interpreter/Interpreter.cpp.obj	246319a577cf1a9c
+444	823	7889807028641771	CMakeFiles/lwgpp.dir/src/interpreter/GotoInterpreter.cpp.obj	bcb24d3de3227af0
+408	825	7889807028359866	CMakeFiles/lwgpp.dir/src/interpreter/LWInterpreter.cpp.obj	93176e7b783c0b0f
+81	1448	7889807025022373	CMakeFiles/lwgpp.dir/src/token/Token.cpp.obj	b8523525dd7a8804
+131	1527	7889807025690741	CMakeFiles/lwgpp.dir/src/error/ErrorHandler.cpp.obj	32de4c34ca49b37a
+115	1711	7889807025386010	CMakeFiles/lwgpp.dir/src/ast/Statement.cpp.obj	de637c8d81066bc7
+377	2603	7889807028138022	CMakeFiles/lwgpp.dir/src/interpreter/Environment.cpp.obj	b0f3a4f1e0628893
+164	3540	7889807025850060	CMakeFiles/lwgpp.dir/src/lexer/Scanner.cpp.obj	b2e6221d43c6434f
+98	6329	7889807025201153	CMakeFiles/lwgpp.dir/src/parser/Parser.cpp.obj	977cad4ee862ed83
+192	10143	7889807026138650	CMakeFiles/lwgpp.dir/src/lexer/LwScanner.cpp.obj	db472e042c6b4e5d
+285	10153	7889807027155525	CMakeFiles/lwgpp.dir/src/lexer/GotoScanner.cpp.obj	3de20642783c0503
+67	13818	7889807024827948	CMakeFiles/lwgpp.dir/src/main.cpp.obj	e743b8406e8623ef
+13819	14765	7889807162407784	lwgpp.exe	1624c6a363a652c1

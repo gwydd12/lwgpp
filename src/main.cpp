@@ -8,7 +8,7 @@
 #include "lexer/LwScanner.h"
 #include "parser/GotoParser.h"
 #include "token/Token.h"
-#include "parser/LwParser.h"
+#include "interpreter/Environment.h"
 
 void testGotoInterpreter() {
     std::string gotoSourceCode = R"(M1: x1 = x1 + 4;
@@ -58,20 +58,21 @@ void testLWInterpreter() {
       End;
     End
         )";
-
-    const auto lexer = std::make_unique<LWScanner>(
-        LWSourceCode
+    const auto lexer = std::make_unique<GotoScanner>(
+        GotoSourceCode
     );
     std::vector<Token> const tokens = lexer->scanProgram();
+    
+    const auto parser = std::make_unique<GOTOParser>();
+    const auto stmts = parser->parse(tokens);
+    std::cout << "Parsed " << stmts.size() << " statements." << std::endl;
 
-    const auto parser = std::make_unique<lw_parser::LwParser>();
-    const auto lwStmts = parser->parse(tokens);
-    std::cout << "Parsed " << lwStmts.size() << " statements." << std::endl;
+    Environment env{}; // initialise empty environment
+    auto interpreter = std::make_unique<lwgpp::interp::GotoInterpreter>(std::move(env));
+    interpreter->setMarkerLineMap(parser->getMarkerLineMap());
+    interpreter->interpret(stmts);
 
-    const auto interpreter = std::make_unique<LWInterpreter>(Environment{});
-    interpreter->interpret(lwStmts);
-
-    std::map<std::string, int> variables = LWInterpreter::environment.getVariables();
+    auto variables = interpreter->environment().getVariables();
     std::cout << "Variables:" << std::endl;
     for (const auto& [var, value] : variables) {
         std::cout << var << " = " << value << std::endl;
