@@ -1,113 +1,110 @@
 #ifndef LWGPP_GOTOINTERPRETER_H
 #define LWGPP_GOTOINTERPRETER_H
+
 #include "Interpreter.h"
+#include <map>
+#include <string>
 
-/**
- * Concrete interpreter implementing a control-flow model
- * based on GOTO and IF statements.
- *
- * This interpreter executes statements sequentially using
- * an explicit program counter and supports non-linear
- * control flow via markers.
- */
-class GotoInterpreter: public Interpreter {
-public:
-    /**
-     * Owns the list of statements representing the program.
-     *
-     * Advanced concepts:
-     * - RAII
-     * - Smart Pointer idiom (std::unique_ptr)
-     */
-    std::vector<std::unique_ptr<Statement>> statements;
+namespace lwgpp::interp {
 
-    /**
-     * Constructs a GotoInterpreter with a given execution environment.
-     * Initializes the program counter to zero.
-     *
-     * @param env Initial execution environment
-     */
-    explicit GotoInterpreter(const Environment& env)
-        : Interpreter(env) {
-        pc_ = 0;
+// ---------- GOTO Policy ----------
+struct GotoPolicy {
+    struct State {
+        int pc{0};
+        bool halted{false};
+        std::map<std::string, int> markerLineMap{};
+    };
+
+    static void run(InterpreterT<GotoPolicy>& self, const Statements& stmts) {
+        auto& st = self.state(); // assign state struct
+        st.halted = false; // reset halted flag in state struct
+
+        while (!st.halted) {
+            if (st.pc < 0 || static_cast<size_t>(st.pc) >= stmts.size()) {
+                throw std::out_of_range("Program counter out of range");
+            }
+
+            const auto& stmtPtr = stmts.at(st.pc);
+
+            if (!stmtPtr) {
+                ++st.pc;
+                continue;
+            }
+
+            dispatch(self, *stmtPtr);
+        }
     }
-
-    /**
-     * Entry point for interpreting a program.
-     * Overrides the abstract interpret method of Interpreter.
-     *
-     * @param statements Sequence of AST statements
-     */
-    void interpret(const std::vector<std::unique_ptr<Statement>>& statements) override;
-
-    /**
-     * Executes a list of statements using the internal program counter.
-     *
-     * @param stmts Statements to execute
-     */
-    void executeStatements(const std::vector<std::unique_ptr<Statement>> &stmts);
-
-    /**
-     * Dispatches execution based on the concrete statement type.
-     *
-     * @param statement AST statement to interpret
-     */
-    void interpretStatement(const Statement &statement);
-
-    /**
-     * Executes an IF statement and conditionally modifies
-     * the program counter.
-     *
-     * @param ifStmt IF-statement AST node
-     */
-    void interpretIf(const If& ifStmt);
-
-    /**
-     * Executes a GOTO statement by updating the program counter.
-     *
-     * @param gotoStmt GOTO-statement AST node
-     */
-    void interpretGoto(const Goto& gotoStmt);
-
-    /**
-     * Sets the mapping between marker names and source-code line numbers.
-     *
-     * @param markerLineMap Map of marker identifiers to line numbers
-     */
-    void setMarkerLineMap(const std::map<std::string, int>& markerLineMap) {
-        markerLineMap_ = markerLineMap;
-    }
-
-    /**
-     * Finds the line number associated with a marker.
-     *
-     * @param marker Marker identifier
-     * @return Line number of the marker
-     */
-    [[nodiscard]] int findLineWithMarker(const std::string &marker) const;
 
 private:
-    /**
-     * Program counter indicating the index of the next statement to execute.
-     */
-    int pc_;
+    static int findLineWithMarker(const InterpreterT<GotoPolicy>& self,
+                                  const std::string& marker) {
+        // map stores marker -> source line, interpreter uses index => line-1
+        return self.state().markerLineMap.at(marker) - 1;
+    }
 
-    /**
-     * Indicates whether program execution has been halted.
-     *
-     * Advanced concepts:
-     * - Execution state management
-     */
-    bool isHalted_;
+    static void dispatch(InterpreterT<GotoPolicy>& self, const Statement& s) {
+        StatementTypes st = getStatementType(s);
 
-    /**
-     * Maps marker identifiers to their corresponding statement indices.
-     *
-     * Advanced concepts:
-     * - std::map (associative container)
-     * - Control-flow resolution
-     */
-    std::map<std::string, int> markerLineMap_;
+        std::visit([&](auto ptr) {
+            using P = std::decay_t<decltype(ptr)>;
+            if (!ptr) throw std::runtime_error("Null statement pointer in GOTO");
+
+            auto& state = self.state();
+
+            if constexpr (std::is_same_v<P, const Assignment*>) {
+                self.interpretAssignment(*ptr);
+                ++state.pc;
+            } else if constexpr (std::is_same_v<P, const If*>) {
+                interpretIf(self, *ptr);
+            } else if constexpr (std::is_same_v<P, const Goto*>) {
+                interpretGoto(self, *ptr);
+            } else if constexpr (std::is_same_v<P, const Halt*>) {
+                state.halted = true;
+            } else if constexpr (
+                std::is_same_v<P, const Loop*> ||
+                std::is_same_v<P, const While*>
+            ) {
+                throw std::runtime_error("LW statement found in GOTO program");
+            } else {
+                static_assert(dependent_false_v<P>, "Unhandled statement in GOTO");
+            }
+        }, st);
+    }
+
+    static void interpretIf(InterpreterT<GotoPolicy>& self, const If& ifStmt) {
+        auto& st = self.state();
+
+        const std::string& variable = ifStmt.variable;
+        const int constant = ifStmt.constant;
+        const std::string& marker = ifStmt.marker;
+
+        self.environment().initVariablesIfAbsent({variable});
+        const int value = self.environment().getVariableValue(variable);
+
+        if (value == constant) st.pc = findLineWithMarker(self, marker);
+        else ++st.pc;
+    }
+
+    static void interpretGoto(InterpreterT<GotoPolicy>& self, const Goto& gotoStmt) {
+        self.state().pc = findLineWithMarker(self, gotoStmt.marker);
+    }
+
+    friend class InterpreterT<GotoPolicy>;
 };
 
-#endif //LWGPP_GOTOINTERPRETER_H
+class GotoInterpreter final : public InterpreterT<GotoPolicy> {
+public:
+    using InterpreterT<GotoPolicy>::InterpreterT;
+
+    void setMarkerLineMap(const std::map<std::string, int>& m) {
+        state().markerLineMap = m;
+    }
+
+    [[nodiscard]] int findLineWithMarker(const std::string& marker) const {
+        return state().markerLineMap.at(marker) - 1;
+    }
+};
+
+} // namespace lwgpp::interp
+
+#endif // LWGPP_GOTOINTERPRETER_H
