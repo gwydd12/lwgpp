@@ -34,7 +34,9 @@ void testGotoInterpreter() {
     const auto stmts = parser->parse(tokens);
     std::cout << "Parsed " << stmts.size() << " statements." << std::endl;
 
-    const auto interpreter = std::make_unique<lwgpp::interp::GotoInterpreter>(Environment{});
+    memory::TrackingMemoryResource memoryTracker{std::pmr::get_default_resource()};
+    Environment env{&memoryTracker};
+    const auto interpreter = std::make_unique<lwgpp::interp::GotoInterpreter>(env);
     interpreter->setMarkerLineMap(parser->getMarkerLineMap());
     interpreter->interpret(stmts);
 
@@ -71,7 +73,8 @@ void testLWInterpreter() {
     const auto stmts = parser->parse(tokens);
     std::cout << "Parsed " << stmts.size() << " statements." << std::endl;
 
-    Environment env{}; // initialise empty environment
+    memory::TrackingMemoryResource memoryTracker{std::pmr::get_default_resource()};
+    Environment env{&memoryTracker};
     auto interpreter = std::make_unique<lwgpp::interp::LWInterpreter>(std::move(env));
     //interpreter->setMarkerLineMap(parser->getMarkerLineMap());
     interpreter->interpret(stmts);
