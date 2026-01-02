@@ -45,10 +45,10 @@ void GotoInterpreter::interpretIf(const If& ifStmt) {
     const int constant = ifStmt.constant;
     const std::string marker = ifStmt.marker;
 
-    environment.initVariablesIfAbsent({variable});
-    int variableValue = environment.getVariableValue(variable);
+    Environment& env = this->env();
+    env.initVariablesIfAbsent({variable});
 
-    if (variableValue == constant) {
+    if (const int variableValue = env.getVariableValue(variable); variableValue == constant) {
         pc_ = findLineWithMarker(marker);
     } else pc_++;
 }

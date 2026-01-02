@@ -30,8 +30,9 @@ void LWInterpreter::interpretLoop(const Loop& loop) {
     std::string variable = loop.variableCondition;
     int variableValue = 0;
     if (!usesConstant) {
-        environment.initVariablesIfAbsent({variable});
-        variableValue = environment.getVariableValue(variable);
+        Environment& env = this->env();
+        env.initVariablesIfAbsent({variable});
+        variableValue = env.getVariableValue(variable);
 
     } else variableValue = std::stoi(variable);
 
@@ -44,9 +45,10 @@ void LWInterpreter::interpretWhile(const While& whileStmt) {
     std::string variable = whileStmt.variable;
     const int constant = whileStmt.constant;
 
-    environment.initVariablesIfAbsent({variable});
+    Environment& env = this->env();
+    env.initVariablesIfAbsent({variable});
 
-    while (environment.getVariableValue(variable) > constant) {
+    while (env.getVariableValue(variable) > constant) {
         interpret(whileStmt.body);
     }
 }

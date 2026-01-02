@@ -21,7 +21,11 @@ public:
      * - Copy semantics
      */
     explicit Interpreter(const Environment& env) {
-        environment = env;
+        environment_ = std::make_unique<Environment>(env);
+    }
+
+    explicit Interpreter(std::unique_ptr<Environment> env) {
+        environment_ = std::move(env);
     }
 
     /**
@@ -43,12 +47,16 @@ public:
      *
      * @param assignment Assignment AST node
      */
-    static void interpretAssignment(const Assignment& assignment);
+    void interpretAssignment(const Assignment& assignment) const;
 
-    /**
-     * Shared execution environment used by all interpreter instances.
-     */
-    static Environment environment;
+    Environment& env() const {
+        return *environment_;
+    }
+
+private:
+    std::unique_ptr<Environment> environment_;
+
+
 };
 
 #endif //LWGPP_INTERPRETER_H

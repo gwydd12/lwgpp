@@ -31,4 +31,6 @@ add_executable(lwgpp src/main.cpp
         src/parser/LwParser.h
         src/parser/GotoParser.cpp
         src/parser/GotoParser.h
+        src/memory/TrackingMemoryResource.cpp
+        src/memory/TrackingMemoryResource.h
 )

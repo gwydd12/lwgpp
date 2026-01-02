@@ -1,7 +1,11 @@
 #ifndef LWGPP_ENVIRONMENT_H
 #define LWGPP_ENVIRONMENT_H
 #include <map>
+#include <memory_resource>
+#include <optional>
 #include <string>
+#include <unordered_map>
+#include "../memory/TrackingMemoryResource.h"
 
 /**
  * Represents the execution environment of the interpreter.
@@ -13,85 +17,61 @@
  * - Standard associative containers
  */
 class Environment {
+public:
+    explicit Environment(std::pmr::memory_resource* mr = std::pmr::get_default_resource())
+        : mem_resource_(mr),
+          variables_(0, std::hash<PmrString>(), std::equal_to(), AllocPair(mem_resource_)) {}
 
-    /**
-     * Mapping of variable names to their integer values.
-     *
-     * Advanced concepts:
-     * - std::map (ordered associative container)
-     */
-    std::map<std::string, int> variables_;
-
-    /**
-     * Initializes a variable with a default value if it does not yet exist.
-     * This function is private to enforce controlled access.
-     *
-     * @param var Variable name
-     */
-    void initVariableIfAbsent(const std::string& var) {
-        if (!variables_.count(var)) {
-            setVariable(var, 0);
-        }
+    // Copy constructor: copy variables using the same memory resource pointer
+    Environment(const Environment& other)
+        : mem_resource_(other.mem_resource_),
+          variables_(0, std::hash<PmrString>(), std::equal_to<>(), AllocPair(mem_resource_)) {
+        variables_.reserve(other.variables_.size());
+        for (const auto& kv : other.variables_) variables_.emplace(kv.first, kv.second);
     }
 
-public:
-    /**
-     * Constructs an environment from an existing variable map.
-     * Takes ownership of the map using move semantics.
-     *
-     * @param variables Initial variable storage
-     */
-    explicit Environment(std::map<std::string, int>& variables)
-        : variables_(std::move(variables)) {}
+    // Copy assignment
+    Environment& operator=(const Environment& other) {
+        if (this == &other) return *this;
+        mem_resource_ = other.mem_resource_;
+        MapType tmp(0, std::hash<PmrString>(), std::equal_to<>(), AllocPair(mem_resource_));
+        tmp.reserve(other.variables_.size());
+        for (const auto& kv : other.variables_) tmp.emplace(kv.first, kv.second);
+        variables_.swap(tmp);
+        return *this;
+    }
 
-    /**
-     * Default constructor creating an empty environment.
-     */
-    Environment() = default;
+    // Move constructor
+    Environment(Environment&& other) noexcept
+        : mem_resource_(other.mem_resource_),
+          variables_(std::move(other.variables_)) {
+        other.mem_resource_ = std::pmr::get_default_resource();
+    }
 
-    /**
-     * Virtual destructor to allow safe polymorphic deletion.
-     */
-    virtual ~Environment() = default;
+    // Move assignment
+    Environment& operator=(Environment&& other) noexcept {
+        if (this == &other) return *this;
+        mem_resource_ = other.mem_resource_;
+        variables_ = std::move(other.variables_);
+        other.mem_resource_ = std::pmr::get_default_resource();
+        return *this;
+    }
 
-    /**
-     * Initializes multiple variables if they are not already present.
-     *
-     * @param vars List of variable names
-     *
-     * Advanced concepts:
-     * - std::initializer_list
-     */
+    ~Environment() = default;
+
     void initVariablesIfAbsent(std::initializer_list<std::string> vars);
-
-    /**
-     * Returns a copy of the current variable map.
-     *
-     * @return Map of variable names to values
-     *
-     * Advanced concepts:
-     * - Value semantics
-     * - Encapsulation (returns copy instead of reference)
-     */
-    std::map<std::string, int> getVariables();
-
-    /**
-     * Sets the value of a variable.
-     * Initializes the variable if it does not already exist.
-     *
-     * @param var Variable name
-     * @param value New value
-     */
     void setVariable(const std::string& var, int value);
+    int getVariableValue(const std::string& var) const;
+    std::map<std::string, int> getVariables() const;
+    std::optional<memory::TrackingMemoryResource::Stats> getMemoryStats() const;
 
-    /**
-     * Retrieves the value of a variable.
-     *
-     * @param var Variable name
-     * @return Variable value
-     */
-    [[nodiscard]] int getVariableValue(const std::string& var) const;
+private:
+    using PmrString = std::pmr::string;
+    using AllocPair = std::pmr::polymorphic_allocator<std::pair<const PmrString, int>>;
+    using MapType = std::unordered_map<PmrString, int, std::hash<PmrString>, std::equal_to<>, AllocPair>;
 
+    std::pmr::memory_resource* mem_resource_;
+    MapType variables_;
 };
 
 #endif // LWGPP_ENVIRONMENT_H
