@@ -4,7 +4,6 @@
 #include <memory_resource>
 #include <optional>
 #include <string>
-#include <unordered_map>
 #include "../memory/TrackingMemoryResource.h"
 
 /**
@@ -14,37 +13,31 @@
  * Advanced concepts:
  * - Encapsulation
  * - RAII
- * - Standard associative containers
+ * - Polymorphic memory resources
  */
 class Environment {
 public:
     explicit Environment(std::pmr::memory_resource* mr = std::pmr::get_default_resource())
-        : mem_resource_(mr),
-          variables_(0, std::hash<PmrString>(), std::equal_to(), AllocPair(mem_resource_)) {}
+        : mem_resource_(mr), values_(mr) {}
 
     // Copy constructor: copy variables using the same memory resource pointer
     Environment(const Environment& other)
         : mem_resource_(other.mem_resource_),
-          variables_(0, std::hash<PmrString>(), std::equal_to<>(), AllocPair(mem_resource_)) {
-        variables_.reserve(other.variables_.size());
-        for (const auto& kv : other.variables_) variables_.emplace(kv.first, kv.second);
-    }
+          values_(other.values_.begin(), other.values_.end(), mem_resource_) {}
 
     // Copy assignment
     Environment& operator=(const Environment& other) {
         if (this == &other) return *this;
         mem_resource_ = other.mem_resource_;
-        MapType tmp(0, std::hash<PmrString>(), std::equal_to<>(), AllocPair(mem_resource_));
-        tmp.reserve(other.variables_.size());
-        for (const auto& kv : other.variables_) tmp.emplace(kv.first, kv.second);
-        variables_.swap(tmp);
+        std::pmr::map<std::pmr::string, int> tmp(other.values_.begin(), other.values_.end(), mem_resource_);
+        values_.swap(tmp);
         return *this;
     }
 
     // Move constructor
     Environment(Environment&& other) noexcept
         : mem_resource_(other.mem_resource_),
-          variables_(std::move(other.variables_)) {
+          values_(std::move(other.values_)) {
         other.mem_resource_ = std::pmr::get_default_resource();
     }
 
@@ -52,7 +45,7 @@ public:
     Environment& operator=(Environment&& other) noexcept {
         if (this == &other) return *this;
         mem_resource_ = other.mem_resource_;
-        variables_ = std::move(other.variables_);
+        values_ = std::move(other.values_);
         other.mem_resource_ = std::pmr::get_default_resource();
         return *this;
     }
@@ -66,12 +59,8 @@ public:
     std::optional<memory::TrackingMemoryResource::Stats> getMemoryStats() const;
 
 private:
-    using PmrString = std::pmr::string;
-    using AllocPair = std::pmr::polymorphic_allocator<std::pair<const PmrString, int>>;
-    using MapType = std::unordered_map<PmrString, int, std::hash<PmrString>, std::equal_to<>, AllocPair>;
-
     std::pmr::memory_resource* mem_resource_;
-    MapType variables_;
+    std::pmr::map<std::pmr::string, int> values_;
 };
 
 #endif // LWGPP_ENVIRONMENT_H
