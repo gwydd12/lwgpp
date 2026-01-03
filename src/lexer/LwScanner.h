@@ -21,22 +21,6 @@
  * - auto in if-initializer
  */
 class LWScanner : public Scanner {
-private:
-    /**
-     * Regex for all language keywords
-     * - static: single instance for all objects
-     * - const: immutable pattern
-     * - RAII valid: automatically managed by compiler
-     */
-    static const std::regex KEYWORDS;
-
-    /**
-     * Static lookup table for keywords
-     * - unordered_map: fast O(1) lookup
-     * - uses strongly typed enum StaticTokenType
-     */
-    static const std::unordered_map<std::string, StaticTokenType> KEYWORD_TABLE;
-
 public:
     /**
      * Constructor
@@ -51,40 +35,24 @@ public:
     }
 
 protected:
+    bool isKeyword(const std::string &word) override;
+    void addKeywordToken(const std::string &word) override;
+
+private:
     /**
-     * Checks if a word is a keyword.
-     *
-     * @param word input string
-     * @return true if word is a keyword
-     *
-     * Concepts:
-     * - override: overrides virtual Scanner::isKeyword
-     * - std::regex_match: matches string against regex
+     * Regex for all language keywords
+     * - static: single instance for all objects
+     * - const: immutable pattern
+     * - RAII valid: automatically managed by compiler
      */
-    bool isKeyword(const std::string &word) override {
-        return std::regex_match(word, KEYWORDS);
-    }
+    static const std::regex keywords_;
 
     /**
-     * Adds a token for a recognized keyword.
-     * Throws exception if the keyword is invalid.
-     *
-     * @param word the keyword string
-     *
-     * Concepts:
-     * - auto in if-initializer (C++17)
-     *     - auto deduces at compile-time the iterator type from unordered_map
-     * - unordered_map lookup
-     * - emplace_back: efficient in-place construction of tokens
-     * - exception handling: throws std::invalid_argument
+     * Static lookup table for keywords
+     * - unordered_map: fast O(1) lookup
+     * - uses strongly typed enum StaticTokenType
      */
-    void addKeywordToken(const std::string &word) override {
-        if (const auto it = KEYWORD_TABLE.find(word); it != KEYWORD_TABLE.end()) {
-            tokens.emplace_back(it->second, currentLine);
-        } else {
-            throw std::invalid_argument("Invalid token: " + word);
-        }
-    }
+    static const std::unordered_map<std::string, StaticTokenType> keyword_table_;
 };
 
 #endif
