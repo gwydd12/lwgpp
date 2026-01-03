@@ -9,9 +9,7 @@ namespace memory {
     public:
         struct Stats {
             std::size_t total_bytes_allocated = 0;
-            std::size_t total_bytes_deallocated = 0;
             std::size_t alloc_calls = 0;
-            std::size_t dealloc_calls = 0;
             std::size_t current_bytes = 0;
             std::size_t peak_bytes = 0;
         };
@@ -22,9 +20,7 @@ namespace memory {
         [[nodiscard]] Stats get_stats() const noexcept {
             return Stats{
             total_bytes_allocated_.load(),
-                total_bytes_deallocated_.load(),
                 alloc_calls_.load(),
-                dealloc_calls_.load(),
                 current_bytes_.load(),
                 peak_bytes_.load()
             };
@@ -32,9 +28,7 @@ namespace memory {
 
         void reset_stats() noexcept {
             total_bytes_allocated_ = 0;
-            total_bytes_deallocated_ = 0;
             alloc_calls_ = 0;
-            dealloc_calls_ = 0;
             current_bytes_ = 0;
             peak_bytes_ = 0;
         }
@@ -44,16 +38,15 @@ namespace memory {
             void* p = parent_->allocate(bytes, alignment);
             total_bytes_allocated_ += bytes;
             ++alloc_calls_;
-            const std::size_t current = current_bytes_.fetch_add(bytes) + bytes;
-            std::size_t peak = peak_bytes_.load();
-            while (current > peak && !peak_bytes_.compare_exchange_weak(peak, current)) {}
+            current_bytes_ += bytes;
+            if (current_bytes_.load() > peak_bytes_.load()) {
+                peak_bytes_ = current_bytes_.load();
+            }
             return p;
         }
 
         void do_deallocate(void* p, const std::size_t bytes, const std::size_t alignment) override {
             parent_->deallocate(p, bytes, alignment);
-            total_bytes_deallocated_ += bytes;
-            ++dealloc_calls_;
             current_bytes_ -= bytes;
         }
 
@@ -67,18 +60,14 @@ namespace memory {
     private:
         memory_resource* parent_;
         std::atomic<std::size_t> total_bytes_allocated_{0};
-        std::atomic<std::size_t> total_bytes_deallocated_{0};
         std::atomic<std::size_t> alloc_calls_{0};
-        std::atomic<std::size_t> dealloc_calls_{0};
         std::atomic<std::size_t> current_bytes_{0};
         std::atomic<std::size_t> peak_bytes_{0};
     };
 
     inline std::ostream& operator<<(std::ostream& os, const TrackingMemoryResource::Stats& s) {
         os << "total_bytes_allocated: " << s.total_bytes_allocated
-           << ", total_bytes_deallocated: " << s.total_bytes_deallocated
            << ", alloc_calls: " << s.alloc_calls
-           << ", dealloc_calls: " << s.dealloc_calls
            << ", current_bytes: " << s.current_bytes
            << ", peak_bytes: " << s.peak_bytes;
         return os;
