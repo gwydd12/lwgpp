@@ -36,7 +36,10 @@ void testGotoInterpreter() {
 
     const auto interpreter = std::make_unique<GotoInterpreter>(Environment{});
     interpreter->setMarkerLineMap(parser->getMarkerLineMap());
-    interpreter->interpret(stmts);
+    interpreter->interpretAsync(stmts);
+    std::this_thread::sleep_for(std::chrono::seconds(10)); // timeout if interpreter takes too long
+    interpreter->halt();
+    interpreter->join();
 
     std::map<std::string, int> variables = GotoInterpreter::environment.getVariables();
     std::cout << "Variables:" << std::endl;
@@ -67,10 +70,13 @@ void testLWInterpreter() {
     const auto stmts = parser->parse(tokens);
     std::cout << "Parsed " << stmts.size() << " statements." << std::endl;
 
-    Environment env{}; // initialise empty environment
-    auto interpreter = std::make_unique<lwgpp::interp::GotoInterpreter>(std::move(env));
-    interpreter->setMarkerLineMap(parser->getMarkerLineMap());
-    interpreter->interpret(stmts);
+    memory::TrackingMemoryResource memoryTracker{std::pmr::get_default_resource()};
+    Environment env{&memoryTracker};
+    auto interpreter = std::make_unique<lwgpp::interp::LWInterpreter>(std::move(env));
+    interpreter->interpretAsync(stmts);
+    std::this_thread::sleep_for(std::chrono::seconds(10)); // timeout if interpreter takes too long
+    interpreter->halt();
+    interpreter->join();
 
     auto variables = interpreter->environment().getVariables();
     std::cout << "Variables:" << std::endl;
