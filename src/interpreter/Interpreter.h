@@ -8,6 +8,10 @@
 #include <vector>
 #include <memory>
 #include <stdexcept>
+#include <mutex>
+#include <thread>
+#include <atomic>
+#include <chrono>
 
 namespace lwgpp::interp {
 
@@ -25,22 +29,50 @@ public:
     using policy_type = Policy;
     using state_type  = typename Policy::State;
 
+    void interpretAsync(const Statements& stmts) {
+        halted_ = false;
+        worker_ = std::thread([this, &stmts]() {
+            Policy::run(*this, stmts);
+        });
+    }
+
+    void join() {
+        if (worker_.joinable()) {
+            worker_.join();
+        }
+    }
+
+    void halt() {
+        halted_.store(true,  std::memory_order_relaxed);
+    }
+
+    bool isHalted() const {
+        return halted_;
+    }
+
+    bool shouldHalt() const {
+        return halted_.load(std::memory_order_relaxed);
+    }
+
     virtual ~InterpreterT() = default;
 
     // Own environment by value
     explicit InterpreterT(Environment env = {})
         : environment_(std::move(env)) {}
 
-    void interpret(const Statements& stmts) {
-        Policy::run(*this, stmts);
-    }
+    // void interpret(const Statements& stmts) {
+    //     Policy::run(*this, stmts);
+    // }
 
     // Access to environment 
-    Environment& environment() { return environment_; }
+    Environment& environment() {
+        return environment_; 
+    }
     const Environment& environment() const { return environment_; }
 
     // Shared piece: assignment execution
     void interpretAssignment(const Assignment& assignment) {
+
         const int line = assignment.line;
         const std::string& assignee = assignment.assignee;
         const std::string& variable = assignment.variable;
@@ -75,6 +107,8 @@ public:
 private:
     Environment environment_;
     state_type state_{};
+    std::atomic<bool> halted_{false};
+    std::thread worker_;
 
     friend Policy; // lets Policy call internal helpers if needed
 };

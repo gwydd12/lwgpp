@@ -10,8 +10,9 @@ namespace lwgpp::interp {
 struct LWPolicy {
     struct State { /* no program counter needed */ };
 
-    static void run(InterpreterT<LWPolicy>& self, const Statements& stmts) {
+    static void run(InterpreterT<LWPolicy>& self, const Statements& stmts) { 
         for (const auto& uptr : stmts) {
+            if (!self.shouldHalt()) return; // check for halt signal 
             if (!uptr) continue; // LW shouldn't have nulls, but safe
             dispatch(self, *uptr);
         }
@@ -19,6 +20,8 @@ struct LWPolicy {
 
 private:
     static void dispatch(InterpreterT<LWPolicy>& self, const Statement& s) {
+
+        if (self.shouldHalt()) return; // add a halt check again in cases
         StatementTypes st = getStatementType(s);
 
         std::visit([&](auto ptr) {
@@ -56,7 +59,8 @@ private:
         }
 
         for (int i = 0; i < count; ++i) {
-            self.interpret(loop.body);
+            if (self.shouldHalt()) return; // add a halt check for each iteration
+            self.interpretAsync(loop.body);
         }
     }
 
@@ -66,8 +70,8 @@ private:
 
         self.environment().initVariablesIfAbsent({var});
 
-        while (self.environment().getVariableValue(var) > constant) {
-            self.interpret(w.body);
+        while (!self.shouldHalt() &&self.environment().getVariableValue(var) > constant) {
+            self.interpretAsync(w.body);
         }
     }
 };

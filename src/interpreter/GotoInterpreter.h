@@ -19,7 +19,7 @@ struct GotoPolicy {
         auto& st = self.state(); // assign state struct
         st.halted = false; // reset halted flag in state struct
 
-        while (!st.halted) {
+        while (!st.halted && !self.shouldHalt()) { // check both Halt statement and interpreter halt
             if (st.pc < 0 || static_cast<size_t>(st.pc) >= stmts.size()) {
                 throw std::out_of_range("Program counter out of range");
             }
@@ -43,6 +43,7 @@ private:
     }
 
     static void dispatch(InterpreterT<GotoPolicy>& self, const Statement& s) {
+
         StatementTypes st = getStatementType(s);
 
         std::visit([&](auto ptr) {
