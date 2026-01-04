@@ -2,81 +2,21 @@
 #define LWGPP_LWINTERPRETER_H
 
 #include "Interpreter.h"
-#include <string>
+namespace interpreter::lw {
+    struct LwPolicy {
+        struct State {};
+        static void run(Interpreter<LwPolicy>& self, const Statements& stmts);
 
-namespace lwgpp::interp {
+    private:
+        static void dispatch(Interpreter<LwPolicy>& self, const Statement& s);
+        static void interpretLoop(Interpreter<LwPolicy>& self, const Loop& loop);
+        static void interpretWhile(Interpreter<LwPolicy>& self, const While& w);
+    };
 
-// ---------- LW Policy ----------
-struct LWPolicy {
-    struct State { /* no program counter needed */ };
-
-    static void run(InterpreterT<LWPolicy>& self, const Statements& stmts) {
-        for (const auto& uptr : stmts) {
-            if (!uptr) continue; // LW shouldn't have nulls, but safe
-            dispatch(self, *uptr);
-        }
-    }
-
-private:
-    static void dispatch(InterpreterT<LWPolicy>& self, const Statement& s) {
-        StatementTypes st = getStatementType(s);
-
-        std::visit([&](auto ptr) {
-            using P = std::decay_t<decltype(ptr)>;
-            if (!ptr) throw std::runtime_error("Null statement pointer in LW");
-
-            if constexpr (std::is_same_v<P, const Assignment*>) {
-                self.interpretAssignment(*ptr);
-            } else if constexpr (std::is_same_v<P, const Loop*>) {
-                interpretLoop(self, *ptr);
-            } else if constexpr (std::is_same_v<P, const While*>) {
-                interpretWhile(self, *ptr);
-            } else if constexpr (
-                std::is_same_v<P, const Goto*> ||
-                std::is_same_v<P, const If*>   ||
-                std::is_same_v<P, const Halt*>
-            ) {
-                throw std::runtime_error("GOTO statement found in LW program");
-            } else {
-                static_assert(dependent_false_v<P>, "Unhandled statement in LW");
-            }
-        }, st);
-    }
-
-    static void interpretLoop(InterpreterT<LWPolicy>& self, const Loop& loop) {
-        const bool usesConstant = loop.constantCondition;
-        int count = 0;
-
-        if (!usesConstant) {
-            const std::string& var = loop.variableCondition;
-            self.environment().initVariablesIfAbsent({var});
-            count = self.environment().getVariableValue(var);
-        } else {
-            count = std::stoi(loop.variableCondition);
-        }
-
-        for (int i = 0; i < count; ++i) {
-            self.interpret(loop.body);
-        }
-    }
-
-    static void interpretWhile(InterpreterT<LWPolicy>& self, const While& w) {
-        const std::string& var = w.variable;
-        const int constant = w.constant;
-
-        self.environment().initVariablesIfAbsent({var});
-
-        while (self.environment().getVariableValue(var) > constant) {
-            self.interpret(w.body);
-        }
-    }
-};
-
-class LWInterpreter final : public InterpreterT<LWPolicy> {
-public:
-    using InterpreterT<LWPolicy>::InterpreterT; // inherit constructors
-};
-
-} // namespace lwgpp::interp
+    class LWInterpreter final : public Interpreter<LwPolicy> {
+    public:
+        using Interpreter::Interpreter;
+    };
+}
 
 #endif // LWGPP_LWINTERPRETER_H

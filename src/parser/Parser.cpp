@@ -25,15 +25,6 @@ Token Parser::consumeToken() {
     return tok;
 }
 
-void Parser::skipToNextLine() {
-    if (isAtEnd()) return;
-
-    const int line = peek().line;
-    while (!isAtEnd() && peek().line == line) {
-        consumeToken();
-    }
-}
-
 void Parser::validateSemicolon() {
     if (isAtEnd()) return;
 
