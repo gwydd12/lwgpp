@@ -9,7 +9,7 @@
 /**
  * Retrieves the stored type (StaticToken or DynamicToken) from the variant.
  *
- * @tparam T Type to retrieve (StaticToken or DynamicToken)
+ * @tparam Variant Token type to retrieve (StaticToken or DynamicToken)
  * @return Reference to the stored type
  */
 template <TokenVariant Variant>
@@ -28,7 +28,7 @@ const std::string& Token::getStringValue() const {
 int Token::getIntValue() const {
     try {
         return std::stoi(get<DynamicToken>().value);
-    } catch (const std::invalid_argument& e) {
+    } catch (const std::invalid_argument&) {
         throw std::runtime_error("Invalid integer conversion: " + get<DynamicToken>().value);
     }
 }

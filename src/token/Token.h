@@ -37,8 +37,6 @@ struct DynamicToken {
      * Allows to keep the value category (lvalue/rvalue) of the argument.
      * Depending on the value category of 'v', it will either copy or move the string into the member variable.
      * std::forward is the same as std::static_cast<T&&>(v), preserving the value category.
-     *
-     * TODO: Maybe call this somewhere in the codebase as a showcase?
      */
     template <typename T>
     DynamicToken(const DynamicTokenType t, T&& v): type(t), value(std::forward<T>(v)) {}
