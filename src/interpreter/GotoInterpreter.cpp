@@ -3,7 +3,7 @@
 using namespace interpreter::goto_lang;
 
 void GotoPolicy::run(Interpreter<GotoPolicy>& self, const Statements& stmts) {
-    auto& st = self.state(); // assign state struct
+    auto& st = self.getState(); // assign state struct
     st.halted = false; // reset halted flag in state struct
 
     while (!st.halted) {
@@ -25,7 +25,7 @@ void GotoPolicy::run(Interpreter<GotoPolicy>& self, const Statements& stmts) {
 int GotoPolicy::findLineWithMarker(const Interpreter<GotoPolicy>& self,
                               const std::string& marker) {
     // map stores marker -> source line, interpreter uses index => line-1
-    return self.state().markerLineMap.at(marker) - 1;
+    return self.getState().markerLineMap.at(marker) - 1;
 }
 
 void GotoPolicy::dispatch(Interpreter<GotoPolicy>& self, const Statement& s) {
@@ -35,7 +35,7 @@ void GotoPolicy::dispatch(Interpreter<GotoPolicy>& self, const Statement& s) {
         using P = std::decay_t<decltype(ptr)>;
         if (!ptr) throw std::runtime_error("Null statement pointer in GOTO");
 
-        auto& state = self.state();
+        auto& state = self.getState();
 
         if constexpr (std::is_same_v<P, const Assignment*>) {
             self.interpretAssignment(*ptr);
@@ -58,26 +58,26 @@ void GotoPolicy::dispatch(Interpreter<GotoPolicy>& self, const Statement& s) {
 }
 
 void GotoPolicy::interpretIf(Interpreter<GotoPolicy>& self, const If& ifStmt) {
-    auto& st = self.state();
+    auto& st = self.getState();
 
     const std::string& variable = ifStmt.variable;
     const int constant = ifStmt.constant;
     const std::string& marker = ifStmt.marker;
 
-    self.environment().initVariablesIfAbsent({variable});
-    if (self.environment().getVariableValue(variable) == constant) {
+    self.getEnvironment().initVariablesIfAbsent({variable});
+    if (self.getEnvironment().getVariableValue(variable) == constant) {
         st.pc = findLineWithMarker(self, marker);
     } else ++st.pc;
 }
 
 void GotoPolicy::interpretGoto(Interpreter<GotoPolicy>& self, const Goto& gotoStmt) {
-    self.state().pc = findLineWithMarker(self, gotoStmt.marker);
+    self.getState().pc = findLineWithMarker(self, gotoStmt.marker);
 }
 
 void GotoInterpreter::setMarkerLineMap(const std::map<std::string, int>& m) {
-    state().markerLineMap = m;
+    getState().markerLineMap = m;
 }
 
 int GotoInterpreter::findLineWithMarker(const std::string& marker) const {
-    return state().markerLineMap.at(marker) - 1;
+    return getState().markerLineMap.at(marker) - 1;
 }
