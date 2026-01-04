@@ -15,7 +15,7 @@ LwParser::parse(std::vector<Token> tokens) {
 std::vector<std::unique_ptr<Statement>> LwParser::parseLW() {
     std::vector<std::unique_ptr<Statement>> statements;
 
-    while (!isAtEnd()) {
+    while (!tokens_.empty()) {
         const Token& currentToken = peek();
         lastLine = currentToken.line;
 
@@ -33,7 +33,7 @@ std::vector<std::unique_ptr<Statement>> LwParser::parseLW() {
                     parseEnd();
                     validateSemicolon();
                     encounteredEnd_ = true;
-                    return statements;
+                    break;
 
                 case StaticTokenType::SEMICOLON:
                     consumeToken();
@@ -52,6 +52,8 @@ std::vector<std::unique_ptr<Statement>> LwParser::parseLW() {
                 "Unexpected token at line " +
                 std::to_string(currentToken.line));
         }
+
+
         if (encounteredEnd_) {
             encounteredEnd_ = false;
             break;
