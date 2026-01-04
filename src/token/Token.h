@@ -37,8 +37,6 @@ struct DynamicToken {
      * Allows to keep the value category (lvalue/rvalue) of the argument.
      * Depending on the value category of 'v', it will either copy or move the string into the member variable.
      * std::forward is the same as std::static_cast<T&&>(v), preserving the value category.
-     *
-     * TODO: Maybe call this somewhere in the codebase as a showcase?
      */
     template <typename T>
     DynamicToken(const DynamicTokenType t, T&& v): type(t), value(std::forward<T>(v)) {}
@@ -51,6 +49,10 @@ struct StaticToken {
     explicit StaticToken(const StaticTokenType t): type(t) {}
 };
 
+/**
+ * TokenTypeTraits provides metadat for the token types.
+ * Fixed specializations for StaticTokenType and DynamicTokenType.
+ */
 template <typename>
 struct TokenTypeTraits;
 
@@ -66,6 +68,9 @@ struct TokenTypeTraits<DynamicTokenType> {
     using token_t = DynamicToken;
 };
 
+/**
+ * Concepts to constrain template parameters for token categories and variants.
+ **/
 template <typename T>
 concept TokenCategory =
     std::same_as<T, StaticTokenType> ||
@@ -90,11 +95,12 @@ struct Token {
     Token(DynamicToken t, const int l) : value(std::move(t)), line(l) {}
 
     template <TokenVariant Variant>
-    [[nodiscard]] bool is() const {
+    bool is() const {
         return std::holds_alternative<Variant>(value);
     }
+
     template <TokenCategory Category, Category T>
-    [[nodiscard]] bool is() const {
+    bool is() const {
         using token_t = TokenTypeTraits<Category>::token_t;
 
         if (auto* ptr = std::get_if<token_t>(&value)) {
@@ -102,8 +108,16 @@ struct Token {
         }
         return false;
     }
+
     template <TokenVariant Variant>
-    const Variant& get() const;
+    const Variant& get() const {
+            if (auto* ptr = std::get_if<Variant>(&value)) {
+                return *ptr;
+            }
+
+            throw std::runtime_error("Type mismatch when accessing token value");
+        }
+
     template <TokenCategory Category>
     Category getType() const {
         using token_t = TokenTypeTraits<Category>::token_t;
@@ -114,8 +128,9 @@ struct Token {
 
         throw std::runtime_error(std::string("Token does not hold ") + TokenTypeTraits<Category>::name);
     }
-    [[nodiscard]] const std::string& getStringValue() const;
-    [[nodiscard]] int getIntValue() const;
+
+    const std::string& getStringValue() const;
+    int getIntValue() const;
 };
 
 

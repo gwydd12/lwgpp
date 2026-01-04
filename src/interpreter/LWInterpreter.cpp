@@ -1,52 +1,65 @@
 #include "LWInterpreter.h"
 
-void LWInterpreter::interpret(const std::vector<std::unique_ptr<Statement>>& statements) {
-    for (const auto& stmt : statements) {
-        interpretStatement(*stmt);
+using namespace interpreter::lw;
+
+void LwPolicy::run(Interpreter<LwPolicy>& self, const Statements& stmts) {
+    for (const auto& ptr : stmts) {
+        if (self.shouldHalt()) return;
+        if (!ptr) continue;
+        dispatch(self, *ptr);
     }
 }
 
-void LWInterpreter::interpretStatement(const Statement& statement) {
-    StatementTypes stmtType = getStatementType(statement);
-    std::visit([this](auto const & typePtr) {
-        using T = std::decay_t<decltype(typePtr)>;
-        if constexpr (std::is_same_v<T, const Assignment*>) {
-            if (!typePtr) throw std::runtime_error("null Assignment pointer");
-            LWInterpreter::interpretAssignment(*typePtr);
-        } else if constexpr (std::is_same_v<T, const Loop*>) {
-            if (!typePtr) throw std::runtime_error("null Loop pointer");
-            this->interpretLoop(*typePtr);
-        } else if constexpr (std::is_same_v<T, const While*>) {
-            if (!typePtr) throw std::runtime_error("null While pointer");
-            this->interpretWhile(*typePtr);
+void LwPolicy::dispatch(Interpreter<LwPolicy>& self, const Statement& s) {
+    StatementTypes st = getStatementType(s);
+
+    std::visit([&](auto ptr) {
+        using P = std::decay_t<decltype(ptr)>;
+        if (!ptr) throw std::runtime_error("Null statement pointer in LW");
+
+        if constexpr (std::is_same_v<P, const Assignment*>) {
+            self.interpretAssignment(*ptr);
+        } else if constexpr (std::is_same_v<P, const Loop*>) {
+            interpretLoop(self, *ptr);
+        } else if constexpr (std::is_same_v<P, const While*>) {
+            interpretWhile(self, *ptr);
+        } else if constexpr (
+            std::is_same_v<P, const Goto*> ||
+            std::is_same_v<P, const If*>   ||
+            std::is_same_v<P, const Halt*>
+        ) {
+            throw std::runtime_error("GOTO statement found in LW program");
         } else {
-            throw std::runtime_error("unexpected statement type");
+            static_assert(dependent_false_v<P>, "Unhandled statement in LW");
         }
-    }, stmtType);
+    }, st);
 }
 
-void LWInterpreter::interpretLoop(const Loop& loop) {
+void LwPolicy::interpretLoop(Interpreter<LwPolicy>& self, const Loop& loop) {
     const bool usesConstant = loop.constantCondition;
-    std::string variable = loop.variableCondition;
-    int variableValue = 0;
+    int count = 0;
+
     if (!usesConstant) {
-        environment.initVariablesIfAbsent({variable});
-        variableValue = environment.getVariableValue(variable);
+        const std::string& var = loop.variableCondition;
+        self.getEnvironment().initVariablesIfAbsent({var});
+        count = self.getEnvironment().getVariableValue(var);
+    } else {
+        count = std::stoi(loop.variableCondition);
+    }
 
-    } else variableValue = std::stoi(variable);
-
-    for (int i = 0; i < variableValue; i++) {
-        interpret(loop.body);
+    for (int i = 0; i < count; ++i) {
+        if (self.shouldHalt()) return; // add a halt check for each iteration
+        self.interpret(loop.body);
     }
 }
 
-void LWInterpreter::interpretWhile(const While& whileStmt) {
-    std::string variable = whileStmt.variable;
-    const int constant = whileStmt.constant;
+void LwPolicy::interpretWhile(Interpreter<LwPolicy>& self, const While& w) {
+    const std::string& var = w.variable;
+    const int constant = w.constant;
 
-    environment.initVariablesIfAbsent({variable});
+    self.getEnvironment().initVariablesIfAbsent({var});
 
-    while (environment.getVariableValue(variable) > constant) {
-        interpret(whileStmt.body);
+    while (!self.shouldHalt() &&self.getEnvironment().getVariableValue(var) > constant) {
+        self.interpret(w.body);
     }
 }

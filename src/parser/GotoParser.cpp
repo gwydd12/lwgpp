@@ -3,7 +3,7 @@
 #include <functional>
 #include <unordered_map>
 
-using namespace goto_parser;
+using namespace parser::goto_lang;
 
 std::vector<std::unique_ptr<Statement>> GotoParser::parse(std::vector<Token> tokens) {
     containsHalt_ = false;
@@ -33,9 +33,15 @@ std::vector<std::unique_ptr<Statement>> GotoParser::parseGoto() {
 
 
             std::unordered_map<StaticTokenType, Handler> router {
-                    { StaticTokenType::IF,   [this](const int ml, const int mv) { return parseIf(ml, mv); } },
-                    { StaticTokenType::GOTO, [this](const int ml, const int mv) { return parseGotoStatement(ml, mv); } },
-                    { StaticTokenType::HALT, [this](const int ml, const int mv) { return parseHalt(ml, mv); } },
+                    { StaticTokenType::IF,   [this](const int ml, const int mv) {
+                        return parseIf(ml, mv);
+                    } },
+                    { StaticTokenType::GOTO, [this](const int ml, const int mv)
+                        { return parseGotoStatement(ml, mv); }
+                    },
+                    { StaticTokenType::HALT, [this](const int ml, const int mv)
+                        { return parseHalt(ml, mv); }
+                    },
                 };
 
             // Dispatch to the appropriate parsing function based on the next token type
@@ -74,7 +80,6 @@ std::unique_ptr<If> GotoParser::parseIf(int line, int markerLine) {
     const Token& gotoMarker = expectAndConsumeToken<DynamicTokenType, DynamicTokenType::MARKER>();
 
     gotoValuesMap_[gotoMarker.getStringValue()] = line;
-
     return std::make_unique<If>(
         variable.getStringValue(),
         constant.getIntValue(),
@@ -87,8 +92,8 @@ std::unique_ptr<If> GotoParser::parseIf(int line, int markerLine) {
 std::unique_ptr<Goto> GotoParser::parseGotoStatement(int line, int markerLine) {
     expectAndConsumeToken<StaticTokenType, StaticTokenType::GOTO>();
     const Token& gotoMarker = expectAndConsumeToken<DynamicTokenType, DynamicTokenType::MARKER>();
-    gotoValuesMap_[gotoMarker.getStringValue()] = line;
 
+    gotoValuesMap_[gotoMarker.getStringValue()] = line;
     return std::make_unique<Goto>(
         gotoMarker.getStringValue(),
         markerLine,

@@ -2,21 +2,15 @@
 #define LWGPP_LWPARSER_H
 #include "Parser.h"
 
-namespace lw_parser {
-    class LwParser final : public parser::Parser {
+namespace parser::lw {
+    class LwParser final : public Parser {
     public:
         std::vector<std::unique_ptr<Statement>>
         parse(std::vector<Token> tokens) override;
 
     private:
-        std::deque<Token> balancedIteration;
-        bool encounteredEnd = false;
-
-        std::vector<std::unique_ptr<Statement>> parseLW();
-        std::unique_ptr<Loop> parseLoop();
-        std::unique_ptr<While> parseWhile();
-        void parseEnd();
-        void validateClosingSequence(int line) const;
+        std::deque<Token> balancedIteration_;
+        bool encounteredEnd_ = false;
 
         /**
          * SFINAE - Substitution Failure Is Not An Error
@@ -26,7 +20,22 @@ namespace lw_parser {
          */
         template<typename TokenCategory, TokenCategory... Expected,
                  std::enable_if_t<std::is_enum_v<TokenCategory>, int> = 0>
-        bool isBalanced();
+        bool isBalanced() {
+            if (balancedIteration_.empty()) return false;
+
+            const Token& token = balancedIteration_.back();
+            if ((... || token.is<TokenCategory, Expected>())) {
+                balancedIteration_.pop_back();
+                return true;
+            }
+            return false;
+        }
+
+        std::vector<std::unique_ptr<Statement>> parseLW();
+        std::unique_ptr<Loop> parseLoop();
+        std::unique_ptr<While> parseWhile();
+        void parseEnd();
+        void validateClosingSequence(int line) const;
     };
 }
 #endif //LWGPP_LWPARSER_H

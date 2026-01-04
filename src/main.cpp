@@ -22,26 +22,35 @@ void testGotoInterpreter() {
     M8: Halt
     )";
 
-    const auto lexer = std::make_unique<GotoScanner>(
+    const auto lexer = std::make_unique<lexer::goto_lang::GotoScanner>(
     gotoSourceCode
     );
     std::vector<Token> const tokens = lexer->scanProgram();
 
     // Use move semantics to transfer ownership of the parser
     // goto_parser::GotoParser is a prvalue (pure rvalue) now it implicitly calls the move constructor
-    const auto parser = std::make_unique<goto_parser::GotoParser>(goto_parser::GotoParser());
+    const auto parser = std::make_unique<parser::goto_lang::GotoParser>(parser::goto_lang::GotoParser());
 
     const auto stmts = parser->parse(tokens);
     std::cout << "Parsed " << stmts.size() << " statements." << std::endl;
 
-    const auto interpreter = std::make_unique<GotoInterpreter>(Environment{});
+    memory::TrackingMemoryResource memoryTracker{std::pmr::get_default_resource()};
+    Environment env{&memoryTracker};
+    const auto interpreter = std::make_unique<interpreter::goto_lang::GotoInterpreter>(env);
     interpreter->setMarkerLineMap(parser->getMarkerLineMap());
-    interpreter->interpret(stmts);
+    interpreter->interpretAsync(stmts);
+    //std::this_thread::sleep_for(std::chrono::seconds(10)); // timeout if interpreter takes too long
+    interpreter->join();
 
-    std::map<std::string, int> variables = GotoInterpreter::environment.getVariables();
+    std::map<std::string, int> variables = interpreter->getEnvironment().getVariables();
     std::cout << "Variables:" << std::endl;
     for (const auto& [var, value] : variables) {
         std::cout << var << " = " << value << std::endl;
+    }
+
+    if (const auto statsOpt = interpreter->getEnvironment().getMemoryStats(); statsOpt.has_value()) {
+        std::cout << "Memory Stats:" << std::endl;
+        std::cout << statsOpt.value() << std::endl;
     }
 }
 
@@ -59,22 +68,29 @@ void testLWInterpreter() {
     End
         )";
 
-    const auto lexer = std::make_unique<LWScanner>(
-        LWSourceCode
-    );
+    const auto lexer = std::make_unique<lexer::lw::LWScanner>(LWSourceCode);
     std::vector<Token> const tokens = lexer->scanProgram();
 
-    const auto parser = std::make_unique<lw_parser::LwParser>();
-    const auto lwStmts = parser->parse(tokens);
-    std::cout << "Parsed " << lwStmts.size() << " statements." << std::endl;
+    const auto parser = std::make_unique<parser::lw::LwParser>();
+    const auto stmts = parser->parse(tokens);
+    std::cout << "Parsed " << stmts.size() << " statements." << std::endl;
 
-    const auto interpreter = std::make_unique<LWInterpreter>(Environment{});
-    interpreter->interpret(lwStmts);
+    memory::TrackingMemoryResource memoryTracker{std::pmr::get_default_resource()};
+    Environment env{&memoryTracker};
+    auto interpreter = std::make_unique<interpreter::lw::LWInterpreter>(std::move(env));
+    interpreter->interpretAsync(stmts);
+    //std::this_thread::sleep_for(std::chrono::seconds(10));
+    interpreter->join();
 
-    std::map<std::string, int> variables = LWInterpreter::environment.getVariables();
+    auto variables = interpreter->getEnvironment().getVariables();
     std::cout << "Variables:" << std::endl;
     for (const auto& [var, value] : variables) {
         std::cout << var << " = " << value << std::endl;
+    }
+
+    if (const auto stats = interpreter->getEnvironment().getMemoryStats(); stats.has_value()) {
+        std::cout << "Memory Stats:" << std::endl;
+        std::cout << stats.value() << std::endl;
     }
 }
 

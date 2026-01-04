@@ -1,62 +1,83 @@
 #include "GotoInterpreter.h"
 
-void GotoInterpreter::interpret(const std::vector<std::unique_ptr<Statement> > &stmts) {
-    executeStatements(stmts);
-}
+using namespace interpreter::goto_lang;
 
-void GotoInterpreter::executeStatements(const std::vector<std::unique_ptr<Statement>> &stmts) {
-    while (!isHalted_) {
-        if (pc_ < 0 || static_cast<size_t>(pc_) >= stmts.size()) {
+void GotoPolicy::run(Interpreter<GotoPolicy>& self, const Statements& stmts) {
+    auto& st = self.getState(); // assign state struct
+    st.halted = false; // reset halted flag in state struct
+
+    while (!st.halted) {
+        if (st.pc < 0 || static_cast<size_t>(st.pc) >= stmts.size()) {
             throw std::out_of_range("Program counter out of range");
         }
 
-        const auto &stmtPtr = stmts.at(pc_);
+        const auto& stmtPtr = stmts.at(st.pc);
+
         if (!stmtPtr) {
-            pc_++;
+            ++st.pc;
             continue;
         }
 
-        const Statement &statement = *stmtPtr;
-        interpretStatement(statement);
+        dispatch(self, *stmtPtr);
     }
 }
 
-void GotoInterpreter::interpretStatement(const Statement& statement) {
-    StatementTypes stmtType = getStatementType(statement);
-    std::visit([this](auto const & typePtr) {
-        using T = std::decay_t<decltype(typePtr)>;
-        if constexpr (std::is_same_v<T, const Assignment*>) {
-            GotoInterpreter::interpretAssignment(*typePtr);
-            pc_++;
-        } else if constexpr (std::is_same_v<T, const If*>) {
-            interpretIf(*typePtr);
-        } else if constexpr (std::is_same_v<T, const Goto*>) {
-            interpretGoto(*typePtr);
-        } else if constexpr (std::is_same_v<T, const Halt*>) {
-            isHalted_ = true;
+int GotoPolicy::findLineWithMarker(const Interpreter<GotoPolicy>& self,
+                              const std::string& marker) {
+    // map stores marker -> source line, interpreter uses index => line-1
+    return self.getState().markerLineMap.at(marker) - 1;
+}
+
+void GotoPolicy::dispatch(Interpreter<GotoPolicy>& self, const Statement& s) {
+    StatementTypes st = getStatementType(s);
+
+    std::visit([&](auto ptr) {
+        using P = std::decay_t<decltype(ptr)>;
+        if (!ptr) throw std::runtime_error("Null statement pointer in GOTO");
+
+        auto& state = self.getState();
+
+        if constexpr (std::is_same_v<P, const Assignment*>) {
+            self.interpretAssignment(*ptr);
+            ++state.pc;
+        } else if constexpr (std::is_same_v<P, const If*>) {
+            interpretIf(self, *ptr);
+        } else if constexpr (std::is_same_v<P, const Goto*>) {
+            interpretGoto(self, *ptr);
+        } else if constexpr (std::is_same_v<P, const Halt*>) {
+            state.halted = true;
+        } else if constexpr (
+            std::is_same_v<P, const Loop*> ||
+            std::is_same_v<P, const While*>
+        ) {
+            throw std::runtime_error("LW statement found in GOTO program");
         } else {
-            throw std::runtime_error("IDK what happend!");
+            static_assert(dependent_false_v<P>, "Unhandled statement in GOTO");
         }
-    }, stmtType);
+    }, st);
 }
 
-void GotoInterpreter::interpretIf(const If& ifStmt) {
-    std::string variable = ifStmt.variable;
+void GotoPolicy::interpretIf(Interpreter<GotoPolicy>& self, const If& ifStmt) {
+    auto& st = self.getState();
+
+    const std::string& variable = ifStmt.variable;
     const int constant = ifStmt.constant;
-    const std::string marker = ifStmt.marker;
+    const std::string& marker = ifStmt.marker;
 
-    environment.initVariablesIfAbsent({variable});
-    int variableValue = environment.getVariableValue(variable);
-
-    if (variableValue == constant) {
-        pc_ = findLineWithMarker(marker);
-    } else pc_++;
+    self.getEnvironment().initVariablesIfAbsent({variable});
+    if (self.getEnvironment().getVariableValue(variable) == constant) {
+        st.pc = findLineWithMarker(self, marker);
+    } else ++st.pc;
 }
 
-void GotoInterpreter::interpretGoto(const Goto& gotoStmt) {
-    pc_ = findLineWithMarker(gotoStmt.marker);
+void GotoPolicy::interpretGoto(Interpreter<GotoPolicy>& self, const Goto& gotoStmt) {
+    self.getState().pc = findLineWithMarker(self, gotoStmt.marker);
 }
 
-int GotoInterpreter::findLineWithMarker(const std::string &marker) const {
-    return markerLineMap_.at(marker) - 1;
+void GotoInterpreter::setMarkerLineMap(const std::map<std::string, int>& m) {
+    getState().markerLineMap = m;
+}
+
+int GotoInterpreter::findLineWithMarker(const std::string& marker) const {
+    return getState().markerLineMap.at(marker) - 1;
 }
