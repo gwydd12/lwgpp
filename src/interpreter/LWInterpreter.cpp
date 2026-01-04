@@ -3,9 +3,10 @@
 using namespace interpreter::lw;
 
 void LwPolicy::run(Interpreter<LwPolicy>& self, const Statements& stmts) {
-    for (const auto& ptr : stmts) {
-        if (!ptr) continue; // LW shouldn't have nulls, but safe
-        dispatch(self, *ptr);
+    for (const auto& uptr : stmts) {
+        if (self.shouldHalt()) return; // check for halt signal
+        if (!uptr) continue; // LW shouldn't have nulls, but safe
+        dispatch(self, *uptr);
     }
 }
 
@@ -47,6 +48,7 @@ void LwPolicy::interpretLoop(Interpreter<LwPolicy>& self, const Loop& loop) {
     }
 
     for (int i = 0; i < count; ++i) {
+        if (self.shouldHalt()) return; // add a halt check for each iteration
         self.interpret(loop.body);
     }
 }
@@ -57,7 +59,7 @@ void LwPolicy::interpretWhile(Interpreter<LwPolicy>& self, const While& w) {
 
     self.getEnvironment().initVariablesIfAbsent({var});
 
-    while (self.getEnvironment().getVariableValue(var) > constant) {
+    while (!self.shouldHalt() &&self.getEnvironment().getVariableValue(var) > constant) {
         self.interpret(w.body);
     }
 }

@@ -6,6 +6,7 @@
 #include <vector>
 #include <memory>
 #include <stdexcept>
+#include <thread>
 
 namespace interpreter {
 
@@ -24,6 +25,32 @@ namespace interpreter {
 
         explicit Interpreter(Environment env)
             : environment_(std::move(env)) {}
+
+
+        void interpretAsync(const Statements& stmts) {
+            halted_ = false;
+            worker_ = std::thread([this, &stmts] {
+                Policy::run(*this, stmts);
+            });
+        }
+
+        void join() {
+            if (worker_.joinable()) {
+                worker_.join();
+            }
+        }
+
+        void halt() {
+            halted_.store(true,  std::memory_order_relaxed);
+        }
+
+        bool isHalted() const {
+            return halted_;
+        }
+
+        bool shouldHalt() const {
+            return halted_.load(std::memory_order_relaxed);
+        }
 
         void interpret(const Statements& stmts) {
             Policy::run(*this, stmts);
@@ -62,6 +89,8 @@ namespace interpreter {
     private:
         Environment environment_;
         state_type state_{};
+        std::atomic<bool> halted_{false};
+        std::thread worker_;
     };
 
 } // namespace lwgpp::interp
