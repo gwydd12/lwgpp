@@ -29,10 +29,15 @@ public:
     using policy_type = Policy;
     using state_type  = typename Policy::State;
 
+    void interpret(const Statements& stmts) {
+        Policy::run(*this, stmts);
+    }
+
     void interpretAsync(const Statements& stmts) {
         halted_ = false;
         worker_ = std::thread([this, &stmts]() {
             Policy::run(*this, stmts);
+            halted_ = true;
         });
     }
 
@@ -115,4 +120,4 @@ private:
 
 } // namespace lwgpp::interp
 
-#endif // LWGPP_INTERPRETER_H
+#endif // INTERPRETER_H

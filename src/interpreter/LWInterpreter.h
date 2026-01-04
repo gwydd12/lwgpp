@@ -12,7 +12,7 @@ struct LWPolicy {
 
     static void run(InterpreterT<LWPolicy>& self, const Statements& stmts) { 
         for (const auto& uptr : stmts) {
-            if (!self.shouldHalt()) return; // check for halt signal 
+            if (self.shouldHalt()) return; // check for halt signal 
             if (!uptr) continue; // LW shouldn't have nulls, but safe
             dispatch(self, *uptr);
         }
@@ -60,7 +60,7 @@ private:
 
         for (int i = 0; i < count; ++i) {
             if (self.shouldHalt()) return; // add a halt check for each iteration
-            self.interpretAsync(loop.body);
+            self.interpret(loop.body);
         }
     }
 
@@ -71,7 +71,7 @@ private:
         self.environment().initVariablesIfAbsent({var});
 
         while (!self.shouldHalt() &&self.environment().getVariableValue(var) > constant) {
-            self.interpretAsync(w.body);
+            self.interpret(w.body);
         }
     }
 };
