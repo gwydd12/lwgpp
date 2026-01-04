@@ -1,9 +1,6 @@
-//
-// Created by philipp.hennken on 04.11.2025.
-//
-
 #include "LwScanner.h"
 
+using namespace lexer::lw;
 /**
  * Checks if a word is a keyword.
  *
@@ -31,7 +28,7 @@ bool LWScanner::isKeyword(const std::string &word) {
  * - emplace_back: efficient in-place construction of tokens
  * - exception handling: throws std::invalid_argument
  */
-void LWScanner::addKeywordToken(const std::string &word) {
+void LWScanner::addKeywordToken(const std::string &word){
     if (const auto it = keyword_table_.find(word); it != keyword_table_.end()) {
         tokens_.emplace_back(it->second, currentLine_);
     } else {
@@ -45,6 +42,7 @@ const std::regex LWScanner::keywords_{
 
 /**
  * STL Containers -> Unordered Map
+ * - Unordered associative container
  */
 const std::unordered_map<std::string, StaticTokenType> LWScanner::keyword_table_ = {
     {"Loop", StaticTokenType::LOOP},

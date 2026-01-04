@@ -15,14 +15,17 @@ namespace parser {
      * concrete parser implementations.
      */
     class Parser {
+    public:
+        virtual ~Parser() = default;
+        virtual std::vector<std::unique_ptr<Statement>> parse(std::vector<Token> tokens) = 0;
+
     protected:
         std::deque<Token> tokens_;
         int lastLine = 1;
 
-        [[nodiscard]] bool isAtEnd() const;
-        [[nodiscard]] const Token& peek() const;
-        Token consumeToken();
-
+        /**
+         *  Must be implemented here to be used by the derived classes.
+         */
         template <TokenCategory Category, Category... TokenType>
         Token expectAndConsumeToken() {
             if (isAtEnd()) {
@@ -37,16 +40,12 @@ namespace parser {
             return consumeToken();
         }
 
-        void skipToNextLine();
+        bool isAtEnd() const;
+        const Token& peek() const;
+        Token consumeToken();
         void validateSemicolon();
         void setTokens(std::vector<Token> t);
-
         std::unique_ptr<Assignment> parseAssignment(int line);
-
-    public:
-        virtual ~Parser() = default;
-        virtual std::vector<std::unique_ptr<Statement>>
-        parse(std::vector<Token> tokens) = 0;
     };
 }
 
