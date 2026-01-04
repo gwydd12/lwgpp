@@ -8,7 +8,7 @@
 #include "lexer/LwScanner.h"
 #include "parser/GotoParser.h"
 #include "token/Token.h"
-#include "interpreter/Environment.h"
+#include "parser/LwParser.h"
 
 void testGotoInterpreter() {
     std::string gotoSourceCode = R"(M1: x1 = x1 + 4;
@@ -34,7 +34,9 @@ void testGotoInterpreter() {
     const auto stmts = parser->parse(tokens);
     std::cout << "Parsed " << stmts.size() << " statements." << std::endl;
 
-    const auto interpreter = std::make_unique<lwgpp::interp::GotoInterpreter>(Environment{});
+    memory::TrackingMemoryResource memoryTracker{std::pmr::get_default_resource()};
+    Environment env{&memoryTracker};
+    const auto interpreter = std::make_unique<lwgpp::interp::GotoInterpreter>(env);
     interpreter->setMarkerLineMap(parser->getMarkerLineMap());
     interpreter->interpretAsync(stmts);
     std::this_thread::sleep_for(std::chrono::seconds(10)); // timeout if interpreter takes too long
@@ -45,6 +47,11 @@ void testGotoInterpreter() {
     std::cout << "Variables:" << std::endl;
     for (const auto& [var, value] : variables) {
         std::cout << var << " = " << value << std::endl;
+    }
+
+    if (const auto statsOpt = interpreter->environment().getMemoryStats(); statsOpt.has_value()) {
+        std::cout << "Memory Stats:" << std::endl;
+        std::cout << statsOpt.value() << std::endl;
     }
 }
 
@@ -72,8 +79,10 @@ void testLWInterpreter() {
     memory::TrackingMemoryResource memoryTracker{std::pmr::get_default_resource()};
     Environment env{&memoryTracker};
     auto interpreter = std::make_unique<lwgpp::interp::LWInterpreter>(std::move(env));
-    //interpreter->setMarkerLineMap(parser->getMarkerLineMap());
-    interpreter->interpret(stmts);
+    interpreter->interpretAsync(stmts);
+    std::this_thread::sleep_for(std::chrono::seconds(10)); // timeout if interpreter takes too long
+    interpreter->halt();
+    interpreter->join();
 
     auto variables = interpreter->environment().getVariables();
     std::cout << "Variables:" << std::endl;

@@ -37,6 +37,18 @@ namespace goto_parser {
             return *this;
         }
 
+        /**
+         * Copy constructor for GotoParser.
+         * Performs a deep copy of all member variables from another GotoParser instance.
+         * @param other GotoParser lvalue reference to another GotoParser instance
+         */
+        GotoParser(const GotoParser& other)  : Parser(other) {
+            markerNumbers_ = other.markerNumbers_;
+            gotoValuesMap_ = other.gotoValuesMap_;
+            markerLineMap_ = other.markerLineMap_;
+            containsHalt_ = other.containsHalt_;
+        }
+
         std::vector<std::unique_ptr<Statement>>
         parse(std::vector<Token> tokens) override;
         std::map<std::string, int> getMarkerLineMap();
