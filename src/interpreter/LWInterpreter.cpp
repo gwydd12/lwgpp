@@ -3,10 +3,10 @@
 using namespace interpreter::lw;
 
 void LwPolicy::run(Interpreter<LwPolicy>& self, const Statements& stmts) {
-    for (const auto& uptr : stmts) {
-        if (self.shouldHalt()) return; // check for halt signal
-        if (!uptr) continue; // LW shouldn't have nulls, but safe
-        dispatch(self, *uptr);
+    for (const auto& ptr : stmts) {
+        if (self.shouldHalt()) return;
+        if (!ptr) continue;
+        dispatch(self, *ptr);
     }
 }
 

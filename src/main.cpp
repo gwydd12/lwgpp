@@ -39,8 +39,7 @@ void testGotoInterpreter() {
     const auto interpreter = std::make_unique<interpreter::goto_lang::GotoInterpreter>(env);
     interpreter->setMarkerLineMap(parser->getMarkerLineMap());
     interpreter->interpretAsync(stmts);
-    std::this_thread::sleep_for(std::chrono::seconds(10)); // timeout if interpreter takes too long
-    interpreter->halt();
+    //std::this_thread::sleep_for(std::chrono::seconds(10)); // timeout if interpreter takes too long
     interpreter->join();
 
     std::map<std::string, int> variables = interpreter->getEnvironment().getVariables();
@@ -80,8 +79,7 @@ void testLWInterpreter() {
     Environment env{&memoryTracker};
     auto interpreter = std::make_unique<interpreter::lw::LWInterpreter>(std::move(env));
     interpreter->interpretAsync(stmts);
-    std::this_thread::sleep_for(std::chrono::seconds(10));
-    interpreter->halt();
+    //std::this_thread::sleep_for(std::chrono::seconds(10));
     interpreter->join();
 
     auto variables = interpreter->getEnvironment().getVariables();
@@ -97,9 +95,9 @@ void testLWInterpreter() {
 }
 
 int main() {
-    std::cout << "\nTesting LW Interpreter:" << std::endl;
-    testLWInterpreter();
     std::cout << "Testing Goto Interpreter:" << std::endl;
     testGotoInterpreter();
+    std::cout << "\nTesting LW Interpreter:" << std::endl;
+    testLWInterpreter();
     return 0;
 }
