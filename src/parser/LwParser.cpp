@@ -1,7 +1,8 @@
 #include "LwParser.h"
 #include <algorithm>
 
-using namespace lw_parser;
+using namespace parser::lw;
+
 std::vector<std::unique_ptr<Statement>>
 LwParser::parse(std::vector<Token> tokens) {
     setTokens(std::move(tokens));

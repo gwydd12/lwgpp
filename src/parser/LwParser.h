@@ -2,8 +2,8 @@
 #define LWGPP_LWPARSER_H
 #include "Parser.h"
 
-namespace lw_parser {
-    class LwParser final : public parser::Parser {
+namespace parser::lw {
+    class LwParser final : public Parser {
     public:
         std::vector<std::unique_ptr<Statement>>
         parse(std::vector<Token> tokens) override;
