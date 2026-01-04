@@ -34,14 +34,14 @@ void testGotoInterpreter() {
     const auto stmts = parser->parse(tokens);
     std::cout << "Parsed " << stmts.size() << " statements." << std::endl;
 
-    const auto interpreter = std::make_unique<GotoInterpreter>(Environment{});
+    const auto interpreter = std::make_unique<lwgpp::interp::GotoInterpreter>(Environment{});
     interpreter->setMarkerLineMap(parser->getMarkerLineMap());
     interpreter->interpretAsync(stmts);
     std::this_thread::sleep_for(std::chrono::seconds(10)); // timeout if interpreter takes too long
     interpreter->halt();
     interpreter->join();
 
-    std::map<std::string, int> variables = GotoInterpreter::environment.getVariables();
+    std::map<std::string, int> variables = interpreter->environment().getVariables();
     std::cout << "Variables:" << std::endl;
     for (const auto& [var, value] : variables) {
         std::cout << var << " = " << value << std::endl;
@@ -61,27 +61,29 @@ void testLWInterpreter() {
       End;
     End
         )";
-    const auto lexer = std::make_unique<GotoScanner>(
-        GotoSourceCode
-    );
+
+    const auto lexer = std::make_unique<LWScanner>(LWSourceCode);
     std::vector<Token> const tokens = lexer->scanProgram();
-    
-    const auto parser = std::make_unique<GOTOParser>();
+
+    const auto parser = std::make_unique<lw_parser::LwParser>();
     const auto stmts = parser->parse(tokens);
     std::cout << "Parsed " << stmts.size() << " statements." << std::endl;
 
     memory::TrackingMemoryResource memoryTracker{std::pmr::get_default_resource()};
     Environment env{&memoryTracker};
     auto interpreter = std::make_unique<lwgpp::interp::LWInterpreter>(std::move(env));
-    interpreter->interpretAsync(stmts);
-    std::this_thread::sleep_for(std::chrono::seconds(10)); // timeout if interpreter takes too long
-    interpreter->halt();
-    interpreter->join();
+    //interpreter->setMarkerLineMap(parser->getMarkerLineMap());
+    interpreter->interpret(stmts);
 
     auto variables = interpreter->environment().getVariables();
     std::cout << "Variables:" << std::endl;
     for (const auto& [var, value] : variables) {
         std::cout << var << " = " << value << std::endl;
+    }
+
+    if (const auto stats = interpreter->environment().getMemoryStats(); stats.has_value()) {
+        std::cout << "Memory Stats:" << std::endl;
+        std::cout << stats.value() << std::endl;
     }
 }
 
