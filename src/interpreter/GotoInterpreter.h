@@ -15,7 +15,7 @@ struct GotoPolicy {
         std::map<std::string, int> markerLineMap{};
     };
 
-    static void run(InterpreterT<GotoPolicy>& self, const Statements& stmts) {
+    static void run(Interpreter<GotoPolicy>& self, const Statements& stmts) {
         auto& st = self.state(); // assign state struct
         st.halted = false; // reset halted flag in state struct
 
@@ -36,13 +36,13 @@ struct GotoPolicy {
     }
 
 private:
-    static int findLineWithMarker(const InterpreterT<GotoPolicy>& self,
+    static int findLineWithMarker(const Interpreter<GotoPolicy>& self,
                                   const std::string& marker) {
         // map stores marker -> source line, interpreter uses index => line-1
         return self.state().markerLineMap.at(marker) - 1;
     }
 
-    static void dispatch(InterpreterT<GotoPolicy>& self, const Statement& s) {
+    static void dispatch(Interpreter<GotoPolicy>& self, const Statement& s) {
         StatementTypes st = getStatementType(s);
 
         std::visit([&](auto ptr) {
@@ -71,7 +71,7 @@ private:
         }, st);
     }
 
-    static void interpretIf(InterpreterT<GotoPolicy>& self, const If& ifStmt) {
+    static void interpretIf(Interpreter<GotoPolicy>& self, const If& ifStmt) {
         auto& st = self.state();
 
         const std::string& variable = ifStmt.variable;
@@ -85,16 +85,16 @@ private:
         else ++st.pc;
     }
 
-    static void interpretGoto(InterpreterT<GotoPolicy>& self, const Goto& gotoStmt) {
+    static void interpretGoto(Interpreter<GotoPolicy>& self, const Goto& gotoStmt) {
         self.state().pc = findLineWithMarker(self, gotoStmt.marker);
     }
 
-    friend class InterpreterT<GotoPolicy>;
+    friend class Interpreter<GotoPolicy>;
 };
 
-class GotoInterpreter final : public InterpreterT<GotoPolicy> {
+class GotoInterpreter final : public Interpreter<GotoPolicy> {
 public:
-    using InterpreterT<GotoPolicy>::InterpreterT;
+    using Interpreter<GotoPolicy>::Interpreter;
 
     void setMarkerLineMap(const std::map<std::string, int>& m) {
         state().markerLineMap = m;

@@ -3,32 +3,27 @@
 
 #include "Environment.h"
 #include "../ast/Statement.h"
-#include <type_traits>
-#include <variant>
 #include <vector>
 #include <memory>
 #include <stdexcept>
 
 namespace lwgpp::interp {
 
-// ---------- tiny metaprogramming helper ----------
 template<class>
 inline constexpr bool dependent_false_v = false; // makes error dependent on template parameter
 
-// Alias
 using Statements = std::vector<std::unique_ptr<Statement>>;
 
-// ---------- Policy-based Interpreter ----------
 template<class Policy>
-class InterpreterT {
+class Interpreter {
 public:
     using policy_type = Policy;
-    using state_type  = typename Policy::State;
+    using state_type  = Policy::State;
 
-    virtual ~InterpreterT() = default;
+    virtual ~Interpreter() = default;
 
     // Own environment by value
-    explicit InterpreterT(Environment env = {})
+    explicit Interpreter(Environment env)
         : environment_(std::move(env)) {}
 
     void interpret(const Statements& stmts) {
@@ -75,8 +70,6 @@ public:
 private:
     Environment environment_;
     state_type state_{};
-
-    friend Policy; // lets Policy call internal helpers if needed
 };
 
 } // namespace lwgpp::interp

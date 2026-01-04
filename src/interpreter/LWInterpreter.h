@@ -10,15 +10,15 @@ namespace lwgpp::interp {
 struct LWPolicy {
     struct State { /* no program counter needed */ };
 
-    static void run(InterpreterT<LWPolicy>& self, const Statements& stmts) {
-        for (const auto& uptr : stmts) {
-            if (!uptr) continue; // LW shouldn't have nulls, but safe
-            dispatch(self, *uptr);
+    static void run(Interpreter<LWPolicy>& self, const Statements& stmts) {
+        for (const auto& ptr : stmts) {
+            if (!ptr) continue; // LW shouldn't have nulls, but safe
+            dispatch(self, *ptr);
         }
     }
 
 private:
-    static void dispatch(InterpreterT<LWPolicy>& self, const Statement& s) {
+    static void dispatch(Interpreter<LWPolicy>& self, const Statement& s) {
         StatementTypes st = getStatementType(s);
 
         std::visit([&](auto ptr) {
@@ -43,7 +43,7 @@ private:
         }, st);
     }
 
-    static void interpretLoop(InterpreterT<LWPolicy>& self, const Loop& loop) {
+    static void interpretLoop(Interpreter<LWPolicy>& self, const Loop& loop) {
         const bool usesConstant = loop.constantCondition;
         int count = 0;
 
@@ -60,7 +60,7 @@ private:
         }
     }
 
-    static void interpretWhile(InterpreterT<LWPolicy>& self, const While& w) {
+    static void interpretWhile(Interpreter<LWPolicy>& self, const While& w) {
         const std::string& var = w.variable;
         const int constant = w.constant;
 
@@ -72,9 +72,9 @@ private:
     }
 };
 
-class LWInterpreter final : public InterpreterT<LWPolicy> {
+class LWInterpreter final : public Interpreter<LWPolicy> {
 public:
-    using InterpreterT<LWPolicy>::InterpreterT; // inherit constructors
+    using Interpreter::Interpreter;
 };
 
 } // namespace lwgpp::interp
