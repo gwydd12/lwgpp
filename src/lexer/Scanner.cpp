@@ -1,11 +1,8 @@
-//
-// Created by philipp.hennken on 30.10.2025.
-//
-
 #include "Scanner.h"
 
 #include "../error/ErrorHandler.h"
 
+using namespace lexer;
 /**
  * Scan the entire source program
  * @return vector of tokens

@@ -1,9 +1,6 @@
-//
-// Created by philipp.hennken on 20.11.2025.
-//
-
 #include "GotoScanner.h"
 
+using namespace lexer::goto_lang;
 /**
  * Check if a word matches any of the language keywords.
  *

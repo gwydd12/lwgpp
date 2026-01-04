@@ -4,8 +4,8 @@
 #include <unordered_set>
 #include "Parser.h"
 
-namespace goto_parser {
-    class GotoParser final : public parser::Parser {
+namespace parser::goto_lang {
+    class GotoParser final : public Parser {
     public:
         GotoParser() = default;
         /**
@@ -49,8 +49,7 @@ namespace goto_parser {
             containsHalt_ = other.containsHalt_;
         }
 
-        std::vector<std::unique_ptr<Statement>>
-        parse(std::vector<Token> tokens) override;
+        std::vector<std::unique_ptr<Statement>> parse(std::vector<Token> tokens) override;
         std::map<std::string, int> getMarkerLineMap();
 
     private:

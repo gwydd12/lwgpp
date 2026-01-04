@@ -22,14 +22,14 @@ void testGotoInterpreter() {
     M8: Halt
     )";
 
-    const auto lexer = std::make_unique<GotoScanner>(
+    const auto lexer = std::make_unique<lexer::goto_lang::GotoScanner>(
     gotoSourceCode
     );
     std::vector<Token> const tokens = lexer->scanProgram();
 
     // Use move semantics to transfer ownership of the parser
     // goto_parser::GotoParser is a prvalue (pure rvalue) now it implicitly calls the move constructor
-    const auto parser = std::make_unique<goto_parser::GotoParser>(goto_parser::GotoParser());
+    const auto parser = std::make_unique<parser::goto_lang::GotoParser>(parser::goto_lang::GotoParser());
 
     const auto stmts = parser->parse(tokens);
     std::cout << "Parsed " << stmts.size() << " statements." << std::endl;
@@ -66,16 +66,14 @@ void testLWInterpreter() {
     End
         )";
 
-    const auto lexer = std::make_unique<LWScanner>(LWSourceCode);
+    const auto lexer = std::make_unique<lexer::lw::LWScanner>(LWSourceCode);
     std::vector<Token> const tokens = lexer->scanProgram();
 
-    const auto parser = std::make_unique<lw_parser::LwParser>();
+    const auto parser = std::make_unique<parser::lw::LwParser>();
     const auto stmts = parser->parse(tokens);
     std::cout << "Parsed " << stmts.size() << " statements." << std::endl;
 
-    memory::TrackingMemoryResource memoryTracker{std::pmr::get_default_resource()};
-    Environment env{&memoryTracker};
-    auto interpreter = std::make_unique<lwgpp::interp::LWInterpreter>(std::move(env));
+    auto interpreter = std::make_unique<lwgpp::interp::LWInterpreter>(Environment{});
     //interpreter->setMarkerLineMap(parser->getMarkerLineMap());
     interpreter->interpret(stmts);
 

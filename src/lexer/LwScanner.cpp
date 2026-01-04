@@ -1,9 +1,6 @@
-//
-// Created by philipp.hennken on 04.11.2025.
-//
-
 #include "LwScanner.h"
 
+using namespace lexer::lw;
 /**
  * Checks if a word is a keyword.
  *

@@ -3,7 +3,7 @@
 #include <functional>
 #include <unordered_map>
 
-using namespace goto_parser;
+using namespace parser::goto_lang;
 
 std::vector<std::unique_ptr<Statement>> GotoParser::parse(std::vector<Token> tokens) {
     containsHalt_ = false;
