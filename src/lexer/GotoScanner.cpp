@@ -61,20 +61,16 @@ bool GotoScanner::isMarker(const std::string &word) {
  * Concepts used:
  * - exception handling (try/catch)
  * - string manipulation (substr, size)
- * - std::stoi conversion
  * - emplace_back with Token construction
  */
 void GotoScanner::addMarkerToken(const std::string &word) {
     try {
-        // Extract number from marker string
-        size_t start = 1;
-        size_t end = word.back() == ':' ? word.size() - 1 : word.size();
+        constexpr size_t start = 1;
+        const size_t end = word.back() == ':' ? word.size() - 1 : word.size();
         std::string value = word.substr(start, end - start);
 
-        // Add marker token
         tokens_.emplace_back(DynamicTokenType::MARKER, value, currentLine_);
 
-        // Add colon token if present
         if (word.back() == ':') {
             tokens_.emplace_back(StaticTokenType::COLON, currentLine_);
         }
