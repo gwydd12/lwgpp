@@ -4,7 +4,7 @@
 #include "Interpreter.h"
 #include <string>
 
-namespace lwgpp::interp {
+namespace interpreter::lw {
 
 // ---------- LW Policy ----------
 struct LWPolicy {

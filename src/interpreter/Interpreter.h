@@ -7,7 +7,7 @@
 #include <memory>
 #include <stdexcept>
 
-namespace lwgpp::interp {
+namespace interpreter {
 
 template<class>
 inline constexpr bool dependent_false_v = false; // makes error dependent on template parameter

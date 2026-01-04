@@ -5,7 +5,7 @@
 #include <map>
 #include <string>
 
-namespace lwgpp::interp {
+namespace interpreter::goto_lang {
 
 // ---------- GOTO Policy ----------
 struct GotoPolicy {
