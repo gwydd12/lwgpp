@@ -97,9 +97,9 @@ void testLWInterpreter() {
 }
 
 int main() {
-    std::cout << "Testing Goto Interpreter:" << std::endl;
-    testGotoInterpreter();
     std::cout << "\nTesting LW Interpreter:" << std::endl;
     testLWInterpreter();
+    std::cout << "Testing Goto Interpreter:" << std::endl;
+    testGotoInterpreter();
     return 0;
 }
