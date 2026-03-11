@@ -52,7 +52,6 @@ Also if you have any feedback on the code, please let me know as this is my firs
 
 ## Acknowledgments
 
-* My group members
 * Søren Hansen for the course at the Aarhus University
 * [cppreference](https://en.cppreference.com/w/)
 * [Microsoft C++ language reference](https://fsharpforfunandprofit.com)
