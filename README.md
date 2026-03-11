@@ -48,8 +48,6 @@ Additionally, if you are interested in taking SWAPK
 feel free to reach out to me for more information about the course and the exam I might remember some parts of it or refer to the
 docs folder 
 
-Also if you have any feedback on the code, please let me know as this is my first F# project.
-
 ## Acknowledgments
 
 * Søren Hansen for the course at the Aarhus University
