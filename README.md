@@ -1,4 +1,4 @@
-# lwgpp - A LOOP, WHILE and maybe a GOTO interpreter
+# lwgpp
 
 An interpreter for [LOOP, WHILE and GOTO](https://en.wikipedia.org/wiki/LOOP_(programming_language)) written in C++.
 
