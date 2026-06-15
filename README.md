@@ -50,7 +50,7 @@ docs folder
 
 ## Acknowledgments
 
-* Søren Hansen for the course at the Aarhus University
+* Søren Hansen for teaching the course at the Aarhus University
 * [cppreference](https://en.cppreference.com/w/)
 * [Microsoft C++ language reference](https://fsharpforfunandprofit.com)
 
